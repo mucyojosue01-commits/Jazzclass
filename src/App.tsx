@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { midi, note, scales, chordScales, chords, progressions, arpeggios, runs, tips, keyNotes, type Lesson } from './music';
+import { midi, note, scales, chordScales, chords, progressions, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
 import { playNote, unlockAudio, playMetronomeTick, closeAudio } from './lib/pianoAudio';
 import PianoDock from './components/PianoDock';
 import TabBar from './components/TabBar';
@@ -53,7 +53,7 @@ export default function App() {
     let items: Lesson[] = [];
     if (tab === 'notes') items = noteLessons;
     if (tab === 'scales') items = scales;
-    if (tab === 'chords') items = [...chords, ...(showFamilies ? chordScales : [])];
+    if (tab === 'chords') items = [...chords, ...harmonies, ...(showFamilies ? chordScales : [])];
     if (tab === 'progressions') items = progressions;
     if (tab === 'arpeggios') items = arpeggios;
     if (tab === 'runs') items = runs;

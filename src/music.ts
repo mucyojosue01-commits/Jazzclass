@@ -1,5 +1,6 @@
 export type Lesson={id:string;title:string;sub?:string;category:string;description:string;feel?:string;lh:string[];rh:string[];tip:string;target?:string;notes?:(string|number)[];bpm?:number;steps?:{name:string;lh:string[];rh:string[];beats?:number}[]};
 export const pc=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+export const pcName = (m:number) => pc[((m % 12) + 12) % 12];
 export const midi=(n:string)=>{const m=n.match(/^([A-G](?:♯|♭|𝄪|𝄫)?)(-?\d)$/);if(!m)return 60;const pitch=m[1];const base:Record<string,number>={'C':0,'B♯':0,'D𝄫':0,'C♯':1,'D♭':1,'D':2,'C𝄪':2,'D♯':3,'E♭':3,'F𝄫':3,'E':4,'F♭':4,'E♯':5,'F':5,'E𝄪':6,'F♯':6,'G♭':6,'G':7,'F𝄪':7,'G♯':8,'A♭':8,'A':9,'G𝄪':9,'A♯':10,'B♭':10,'C𝄫':10,'B':11,'C♭':11,'A𝄪':11};return (Number(m[2])+1)*12+(base[pitch]??0)};
 export const note=(n:number)=>pc[((n%12)+12)%12]+(Math.floor(n/12)-1);
 const scaleDefs=[
@@ -38,7 +39,6 @@ export const runs:Lesson[]=motifDefs.flatMap((m,i)=>roots.concat([6,10,5,2,9]).m
 
 export const KEYBOARD_LOW = 36; // C2 — includes the bass register used by left-hand patterns
 export const KEYBOARD_HIGH = 84; // C6
-export const pcName = (m:number) => pc[((m % 12) + 12) % 12];
 
 export const keyNotes = [
  {degree:'1',label:'Tonic',interval:0,role:'Home. Every phrase wants to land here.'},

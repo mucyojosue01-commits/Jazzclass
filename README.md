@@ -1,22 +1,23 @@
 # JazzClass — F♯ Piano Lab
 
-A responsive, browser-based piano learning app focused on F-sharp harmony, scales, chords, progressions, two-hand voicings, arpeggios, short professional runs, and passing chords.
+JazzClass is a responsive F-sharp-centred piano study application built with React, TypeScript and Vite.
 
-## Run it
-Open `index.html` in a modern browser. No build step, account, API key, backend, or paid service is required.
+## Run locally
+`npm install` then `npm run dev`. Production build: `npm run build`.
 
-## Current features
-- Dark, compact lesson interface inspired by the supplied visual reference.
-- F♯ major, natural minor, harmonic minor, melodic minor, modes, pentatonic, blues, and chromatic scales.
-- F♯ diatonic seventh chords and useful extended voicings.
-- Jazz, worship, praise, pop, and gospel progressions with separate LH and RH parts.
-- Short chord connectors and passing-chord examples with note spellings and practice tips.
-- Tap-to-play piano keys and lesson examples using the Web Audio API.
-- Two-hand keyboard highlighting: blue for LH, gold for RH.
-- Responsive layout for phones and desktop.
+## Music learning library
+- F♯ major, natural/harmonic/melodic minor, modes, pentatonic and blues scales.
+- Harmonised major and minor chord-scale families, chord voicings and extensions.
+- Jazz, worship, praise, pop and gospel two-hand progressions.
+- 50 passing-chord combinations with LH bass and RH voicing.
+- 100 short runs and licks with two-hand support, chord-tone targets and practice advice.
+- Live piano keyboard and note-by-note/chord playback display.
 
-## Music notation
-LH = left hand; RH = right hand. The app shows note names and practical hand roles. The piano sounds are synthesized locally by the browser; no audio files are downloaded.
+## Sound and controls
+The app loads a sampled acoustic grand piano (FluidR3 GM) with `soundfont-player`. Playback includes tempo, touch/velocity, output level, metronome, and loop controls. Samples load on first playback and require an internet connection. The default tempo is intentionally moderate; users can adjust it.
 
-## Roadmap
-Potential next improvements: adjustable tempo/metronome, fingering overlays, transposition, recording practice, more inversions, and a larger progression/run library.
+## Interface
+Patrick Hand / Patrick Hand SC typography, near-black and monochrome piano keys, restrained gold active-key accents, and chocolate-coloured right-hand notation.
+
+## Deployment
+Connected to GitHub and Vercel. Commits to the production branch trigger deployment.

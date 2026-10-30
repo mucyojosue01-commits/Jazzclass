@@ -1,17 +1,17 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {playNote,unlockAudio} from './lib/pianoAudio';
+import {playNote,unlockAudio,playMetronomeTick,closeAudio} from './lib/pianoAudio';
 import {Lesson,scales,chordScales,chords,progressions,passingChords,runs,midi,note} from './music';
 type Tab='Scales'|'Chords'|'Progressions'|'Passing chords'|'Runs & licks';
 const tabs:Tab[]=['Scales','Chords','Progressions','Passing chords','Runs & licks'];
 const fmt=(n:string)=>n.replace(/♯/g,'#').replace(/♭/g,'b').replace(/^E#(\\d)$/,'F$1').replace(/^B#(\\d)$/,'C$1');
 export default function App(){
  const [tab,setTab]=useState<Tab>('Scales'),[selected,setSelected]=useState<Lesson|null>(null),[tempo,setTempo]=useState(72),[velocity,setVelocity]=useState(78),[volume,setVolume]=useState(72),[playing,setPlaying]=useState(false),[played,setPlayed]=useState<string[]>([]),[active,setActive]=useState<string[]>([]),[filter,setFilter]=useState(''),[showChordScale,setShowChordScale]=useState(true),[loop,setLoop]=useState(false),[metronome,setMetronome]=useState(false);
- const ctx=useRef<AudioContext|null>(null),timers=useRef<number[]>([]),stopFlag=useRef(false),metroRef=useRef<number[]>([]),voices=useRef<{stop:()=>void}[]>([]);
- useEffect(()=>{return()=>{stopFlag.current=true;timers.current.forEach(clearTimeout);metroRef.current.forEach(clearTimeout);ctx.current?.close()}},[]);
+ const timers=useRef<number[]>([]),stopFlag=useRef(false),metroRef=useRef<number[]>([]),voices=useRef<{stop:()=>void}[]>([]);
+ useEffect(()=>{return()=>{stopFlag.current=true;timers.current.forEach(clearTimeout);metroRef.current.forEach(clearTimeout);closeAudio()}},[]);
  const data=useMemo(()=>{let a:Lesson[]=[];if(tab==='Scales')a=scales;if(tab==='Chords')a=[...chords,...(showChordScale?chordScales:[])];if(tab==='Progressions')a=progressions;if(tab==='Passing chords')a=passingChords;if(tab==='Runs & licks')a=runs;const q=filter.toLowerCase().trim();return q?a.filter(x=>(x.title+' '+x.category+' '+x.description+' '+x.tip).toLowerCase().includes(q)):a},[tab,filter,showChordScale]);
  function getAudioContext(){const AC=window.AudioContext||((window as any).webkitAudioContext);if(!ctx.current)ctx.current=new AC();return ctx.current}
  async function sound(names:string[],delay=0,duration=.7,hand:'LH'|'RH'|'BOTH'='BOTH'){
-  const ready=unlockAudio();const audioContext=ctx.current||(ctx.current=new (window.AudioContext||((window as any).webkitAudioContext))());await ready;if(stopFlag.current)return;
+  const ready=unlockAudio();await ready;if(stopFlag.current)return;
   names.forEach(name=>{voices.current.push(playNote(midi(name),{when:Math.max(0,delay),duration,velocity:Math.max(.05,Math.min(1,(velocity/100)*(volume/100)))}));});showNotes(names,hand);
  }
  function showNotes(names:string[],hand:'LH'|'RH'|'BOTH'){const labels=names.map(n=>hand==='LH'?'L '+n:hand==='RH'?'R '+n:n);setActive(old=>[...old.filter(x=>!labels.includes(x)),...labels].slice(-20));setPlayed(old=>[...labels,...old].slice(0,36))}
@@ -22,7 +22,7 @@ export default function App(){
  else {const sequence=item.rh.length?item.rh:item.notes||[];const stepMs=(tab==='Runs & licks'?beat/2:beat);sequence.forEach((n,i)=>later(()=>{if(stopFlag.current)return;sound([n],0,Math.max(.25,stepMs*1.6/1000),'RH').catch(console.error);},i*stepMs));const chordAt=sequence.length*stepMs+100;later(()=>{if(stopFlag.current)return;sound(item.lh,0,.9,'LH').catch(console.error)},0);later(()=>{if(stopFlag.current)return;sound(item.rh,0,.9,'RH').catch(console.error)},chordAt);later(()=>{setPlaying(false);setActive([]);if(loop&&!stopFlag.current)playItem(item)},chordAt+1200)}
  }catch(e){setPlaying(false);alert(e instanceof Error?e.message:'Piano audio could not load.')} }
  function playChord(item:Lesson){stop();stopFlag.current=false;setSelected(item);setPlaying(true);sound(item.lh,0,1.2,'LH').catch(()=>{});sound(item.rh,0,1.2,'RH').catch(()=>{});later(()=>setPlaying(false),1400)}
- function startMetronome(){metroRef.current.forEach(clearTimeout);metroRef.current=[];const beat=60000/tempo;let count=0;const tick=()=>{if(!metronome)return;try{const c=ctx.current||(ctx.current=new (window.AudioContext||((window as any).webkitAudioContext))());if(c.state==='suspended')void c.resume();const o=c.createOscillator(),g=c.createGain();o.frequency.value=count%4===0?1000:700;g.gain.value=.035;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.035)}catch{}count++;metroRef.current.push(window.setTimeout(tick,beat))};tick()}
+ function startMetronome(){metroRef.current.forEach(clearTimeout);metroRef.current=[];const beat=60000/tempo;let count=0;const tick=()=>{if(!metronome)return;try{playMetronomeTick(count%4===0)}catch{}count++;metroRef.current.push(window.setTimeout(tick,beat))};tick()}
  useEffect(()=>{if(metronome)startMetronome();else{metroRef.current.forEach(clearTimeout);metroRef.current=[]}},[metronome,tempo]);
  const current=selected||data[0];
  const noteNames=Array.from({length:48},(_,i)=>note(36+i));

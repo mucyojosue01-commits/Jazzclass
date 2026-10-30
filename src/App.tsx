@@ -20,7 +20,7 @@ type Tab = typeof TABS[number]['id'];
 
 const noteLessons: Lesson[] = keyNotes.map((n, i) => ({
   id: 'note-' + i, title: n.name + ' · ' + n.degree, sub: n.label,
-  category: 'F♯ major · scale degree', feel: n.role,
+  category: 'F♯ major · scale degree', description: n.role, feel: n.role,
   notes: [n.midi], rh: [n.name + '4'], lh: [], bpm: 72,
   tip: n.role + ' Play it, listen to its relationship with F♯, then use it to build a short phrase.',
 }));

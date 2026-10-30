@@ -9,7 +9,6 @@ export default function App(){
  const timers=useRef<number[]>([]),stopFlag=useRef(false),metroRef=useRef<number[]>([]),voices=useRef<{stop:()=>void}[]>([]);
  useEffect(()=>{return()=>{stopFlag.current=true;timers.current.forEach(clearTimeout);metroRef.current.forEach(clearTimeout);closeAudio()}},[]);
  const data=useMemo(()=>{let a:Lesson[]=[];if(tab==='Scales')a=scales;if(tab==='Chords')a=[...chords,...(showChordScale?chordScales:[])];if(tab==='Progressions')a=progressions;if(tab==='Passing chords')a=passingChords;if(tab==='Runs & licks')a=runs;const q=filter.toLowerCase().trim();return q?a.filter(x=>(x.title+' '+x.category+' '+x.description+' '+x.tip).toLowerCase().includes(q)):a},[tab,filter,showChordScale]);
- function getAudioContext(){const AC=window.AudioContext||((window as any).webkitAudioContext);if(!ctx.current)ctx.current=new AC();return ctx.current}
  async function sound(names:string[],delay=0,duration=.7,hand:'LH'|'RH'|'BOTH'='BOTH'){
   const ready=unlockAudio();await ready;if(stopFlag.current)return;
   names.forEach(name=>{voices.current.push(playNote(midi(name),{when:Math.max(0,delay),duration,velocity:Math.max(.05,Math.min(1,(velocity/100)*(volume/100)))}));});showNotes(names,hand);

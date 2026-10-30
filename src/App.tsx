@@ -146,7 +146,7 @@ export default function App() {
         <div className="detail-kicker">LESSON DETAILS</div>
         {current ? <>
           <h2>{current.title}</h2><span className="detail-sub">{current.sub || current.category}</span>
-          <p className="detail-copy">{current.feel}</p>
+          <p className="detail-copy">{current.feel ?? current.description}</p>
           {(tab === 'progressions' || tab === 'runs') ? <div className="hand-card left-hand"><b>LEFT HAND</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Left-hand notes · blue markers</small></div> :
             <div className="hand-card right-hand"><b>RIGHT HAND</b><p>{current.rh.join('  ·  ') || current.notes?.join(' · ') || '—'}</p><small>Scale and chord notes · chocolate markers</small></div>}
           {current.steps?.length ? <div className="step-list"><b>CHORD-BY-CHORD MOVEMENT</b>{current.steps.map((step, i) => <div className={'step-row ' + (stepIndex === i ? 'step-active' : '')} key={step.name}><span>{String(i + 1).padStart(2, '0')} · {step.name}</span><small>LH {step.lh.join(' + ')}</small></div>)}</div> : null}

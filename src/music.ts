@@ -1,4 +1,4 @@
-export type Lesson={id:string;title:string;category:string;description:string;lh:string[];rh:string[];tip:string;target?:string;notes?:string[];steps?:{name:string;lh:string[];rh:string[]}[]};
+export type Lesson={id:string;title:string;sub?:string;category:string;description:string;feel?:string;lh:string[];rh:string[];tip:string;target?:string;notes?:string[];bpm?:number;steps?:{name:string;lh:string[];rh:string[];beats?:number}[]};
 export const pc=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
 export const midi=(n:string)=>{const m=n.match(/^([A-G](?:♯|♭|𝄪|𝄫)?)(-?\d)$/);if(!m)return 60;const pitch=m[1];const base:Record<string,number>={'C':0,'B♯':0,'D𝄫':0,'C♯':1,'D♭':1,'D':2,'C𝄪':2,'D♯':3,'E♭':3,'F𝄫':3,'E':4,'F♭':4,'E♯':5,'F':5,'E𝄪':6,'F♯':6,'G♭':6,'G':7,'F𝄪':7,'G♯':8,'A♭':8,'A':9,'G𝄪':9,'A♯':10,'B♭':10,'C𝄫':10,'B':11,'C♭':11,'A𝄪':11};return (Number(m[2])+1)*12+(base[pitch]??0)};
 export const note=(n:number)=>pc[((n%12)+12)%12]+(Math.floor(n/12)-1);
@@ -26,3 +26,43 @@ const roots=[6,8,11,1,3];
 export const passingChords:Lesson[]=passingTypes.flatMap((t,i)=>roots.map((r,j)=>{const root=(r+[0,2,5,7,9][j])%12;const ints=t[2] as number[];const pcs=ints.map(k=>(root+k)%12);const inv=j%3;const ordered=[...pcs.slice(inv),...pcs.slice(0,inv)];const lh=[pc[root]+'2',pc[(root+7)%12]+'2'];const rh=ordered.slice(0,3).map((p,k)=>pc[p]+(k===2?'5':'4'));return{id:'pass-'+(i*5+j+1),title:pc[root]+' '+String(t[0])+' · shape '+(j+1),category:String(t[0]),description:String(t[4]),lh,rh,tip:'LH plays '+lh.join(' + ')+'. RH plays '+rh.join(' + ')+'. Keep this passing chord brief, then resolve to '+['F♯','G♯m','B','C♯','F♯m'][j]+' with the smallest possible movement.',target:['F♯','G♯m','B','C♯','F♯m'][j]};}));
 const motifDefs=[['Upper neighbour turn',[0,2,1,0],'Turn around the chord root with a light upper neighbour.'],['Dominant enclosure',[7,10,11,9],'Approach a guide tone from above and below, then resolve.'],['Gospel pickup',[4,5,9],'Short three-note pickup into the tonic chord.'],['Minor chord answer',[0,3,7,10],'Outline the minor seventh sound; leave space after the phrase.'],['Major 6/9 sparkle',[0,4,7,9,11],'A short chord-tone phrase with a gentle sixth colour.'],['Chromatic lower approach',[2,1,0],'Resolve the semitone into the target chord tone on the beat.'],['Dominant 9 fragment',[4,7,10,14],'Use the 3rd, 5th, flat 7th and 9th of the dominant.'],['Descending chord tones',[11,7,4,0],'Fall through chord tones rather than running the scale.'],['Double-note answer',[0,4,7,4],'A compact repeated contour suitable between vocal lines.'],['Jazz turnaround tag',[7,9,10,11,0],'A five-note tag; keep it relaxed and resolve clearly.']];
 export const runs:Lesson[]=motifDefs.flatMap((m,i)=>roots.concat([6,10,5,2,9]).map((r,j)=>{const root=(r+(j>4?j-4:0))%12;const seq=(m[1] as number[]).map(k=>note(58+root+k));const leftSeq=seq.map(n=>note(midi(n)-12));return{id:'lick-'+(i*10+j+1),title:String(m[0])+' · '+pc[root]+' ('+(i*10+j+1)+')',category:'Run & lick · '+(i+1),description:'Short chord-tone connector played by the left hand in F♯-centred harmony.',lh:leftSeq,rh:[],notes:leftSeq,tip:String(m[2])+' LEFT HAND: '+leftSeq.join(' – ')+'. Play as relaxed eighth-notes; land the final note on the next chord or strong beat.',target:pc[(root+7)%12]};}));
+
+export const KEYBOARD_LOW = 36; // C2 — includes the bass register used by left-hand patterns
+export const KEYBOARD_HIGH = 84; // C6
+export const pcName = (m:number) => pc[((m % 12) + 12) % 12];
+
+export const keyNotes = [
+ {degree:'1',label:'Tonic',interval:0,role:'Home. Every phrase wants to land here.'},
+ {degree:'2',label:'Supertonic',interval:2,role:'Steps away from home — gentle motion.'},
+ {degree:'3',label:'Mediant',interval:4,role:'The note that makes the scale sound major.'},
+ {degree:'4',label:'Subdominant',interval:5,role:'Lift. Pairs with the tonic to open things up.'},
+ {degree:'5',label:'Dominant',interval:7,role:'The strong, stable pillar of the key.'},
+ {degree:'6',label:'Submediant',interval:9,role:'Sweet and slightly wistful.'},
+ {degree:'7',label:'Leading tone',interval:11,role:'Wants to resolve upward to F♯.'},
+].map(n=>({...n,midi:54+n.interval,name:pcName(54+n.interval)}));
+
+const arpDefs = [
+ ['F♯ Major','F♯',[0,4,7,12]],
+ ['F♯ Minor','F♯m',[0,3,7,12]],
+ ['F♯ Major 7','F♯maj7',[0,4,7,11,12]],
+ ['F♯ Minor 7','F♯m7',[0,3,7,10,12]],
+ ['F♯ Dominant 7','F♯7',[0,4,7,10,12]],
+ ['F♯ Diminished','F♯dim',[0,3,6,12]],
+ ['F♯ Minor 9','F♯m9',[0,3,7,10,14,12]],
+] as const;
+export const arpeggios:Lesson[] = arpDefs.map(([title,sub,ints],i)=>{
+ const up=ints.map(n=>note(66+n));
+ const sequence=[...up,...up.slice(0,-1).reverse()];
+ return {id:'arp-'+i,title,sub,category:'Arpeggio',description:'Root to top and back down, one note at a time.',feel:'Hear each chord tone clearly. Keep the movement even and connected.',lh:[],rh:sequence,notes:sequence,bpm:88,tip:'Keep every note even. Listen for the chord quality as the notes rise, then return without rushing.'};
+});
+
+export const tips = [
+ {title:'F♯ major is mostly black keys',body:'Six of its seven notes sit on black keys. Rest your hand and let the black keys guide you — only B is white. That shape is easy to memorise.'},
+ {title:'Anchor on F♯',body:'Find F♯ before you begin. Hear it as home, then practise moving away from it and returning with control.'},
+ {title:'Land on the tonic',body:'Whenever a phrase feels unfinished, it is probably waiting for F♯. Try ending short runs on the tonic and hear how it settles.'},
+ {title:'Two beats per chord is plenty',body:'Keep each chord steady. Loop one progression slowly until the changes feel automatic before increasing the tempo.'},
+ {title:'Use inversions to connect chords',body:'Choose the nearest inversion instead of jumping to a distant shape. Smooth voice leading makes a progression sound intentional.'},
+ {title:'Slow is the fast way',body:'If a run falls apart, halve the speed instead of pushing through. Clean, even playing builds the control that speed later borrows.'},
+ {title:'Listen before you look',body:'Play a progression, hum the line you hear, then find those notes on the keyboard. Naming what you hear is a core musical skill.'},
+ {title:'Leave space in your fills',body:'A good run answers the music; it does not compete with it. Keep phrases short, resolve clearly and leave room for the singer or melody.'},
+];

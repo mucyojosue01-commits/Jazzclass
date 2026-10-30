@@ -1,48 +1,176 @@
-import {useEffect,useMemo,useRef,useState} from 'react';
-import {playNote,unlockAudio,playMetronomeTick,closeAudio} from './lib/pianoAudio';
-import {Lesson,scales,chordScales,chords,progressions,passingChords,runs,midi,note} from './music';
-type Tab='Scales'|'Chords'|'Progressions'|'Passing chords'|'Runs & licks';
-const tabs:Tab[]=['Scales','Chords','Progressions','Passing chords','Runs & licks'];
-const fmt=(n:string)=>n.replace(/♯/g,'#').replace(/♭/g,'b').replace(/^E#(\\d)$/,'F$1').replace(/^B#(\\d)$/,'C$1');
-export default function App(){
- const [tab,setTab]=useState<Tab>('Scales'),[selected,setSelected]=useState<Lesson|null>(null),[tempo,setTempo]=useState(72),[velocity,setVelocity]=useState(78),[volume,setVolume]=useState(72),[playing,setPlaying]=useState(false),[played,setPlayed]=useState<string[]>([]),[active,setActive]=useState<string[]>([]),[filter,setFilter]=useState(''),[showChordScale,setShowChordScale]=useState(true),[loop,setLoop]=useState(false),[metronome,setMetronome]=useState(false);
- const timers=useRef<number[]>([]),stopFlag=useRef(false),metroRef=useRef<number[]>([]),voices=useRef<{stop:()=>void}[]>([]);
- useEffect(()=>{return()=>{stopFlag.current=true;timers.current.forEach(clearTimeout);metroRef.current.forEach(clearTimeout);closeAudio()}},[]);
- const data=useMemo(()=>{let a:Lesson[]=[];if(tab==='Scales')a=scales;if(tab==='Chords')a=[...chords,...(showChordScale?chordScales:[])];if(tab==='Progressions')a=progressions;if(tab==='Passing chords')a=passingChords;if(tab==='Runs & licks')a=runs;const q=filter.toLowerCase().trim();return q?a.filter(x=>(x.title+' '+x.category+' '+x.description+' '+x.tip).toLowerCase().includes(q)):a},[tab,filter,showChordScale]);
- async function sound(names:string[],delay=0,duration=.7,hand:'LH'|'RH'|'BOTH'='BOTH'){
-  const ready=unlockAudio();await ready;if(stopFlag.current)return;
-  names.forEach(name=>{voices.current.push(playNote(midi(name),{when:Math.max(0,delay),duration,velocity:Math.max(.05,Math.min(1,(velocity/100)*(volume/100)))}));});showNotes(names,hand);
- }
- function showNotes(names:string[],hand:'LH'|'RH'|'BOTH'){const labels=names.map(n=>hand==='LH'?'L '+n:hand==='RH'?'R '+n:n);setActive(old=>[...old.filter(x=>!labels.includes(x)),...labels].slice(-20));setPlayed(old=>[...labels,...old].slice(0,36))}
+import { useEffect, useMemo, useState } from 'react';
+import { midi, note, scales, chordScales, chords, progressions, arpeggios, runs, tips, keyNotes, type Lesson } from './music';
+import { playNote, unlockAudio, playMetronomeTick, closeAudio } from './lib/pianoAudio';
+import PianoDock from './components/PianoDock';
+import TabBar from './components/TabBar';
+import PlayCard from './components/PlayCard';
+import SectionIntro from './components/SectionIntro';
+import usePlayback from './hooks/usePlayback';
 
- function later(fn:()=>void,ms:number){const id=window.setTimeout(fn,ms);timers.current.push(id)}
- async function playItem(item:Lesson){
-  stop();stopFlag.current=false;setSelected(item);setPlaying(true);setPlayed([]);
-  try{const beat=60000/tempo;const leftOnly=tab==='Progressions'||tab==='Runs & licks';
-   const playStep=(step:{name?:string;lh:string[];rh:string[]},at:number)=>later(()=>{if(stopFlag.current)return;if(leftOnly){if(step.lh.length)sound(step.lh,0,Math.max(.35,beat*3.5/1000),'LH').catch(console.error)}else if(step.rh.length)sound(step.rh,0,Math.max(.35,beat*3.5/1000),'RH').catch(console.error)},at);
-   if(item.steps?.length){item.steps.forEach((s,i)=>playStep(s,i*beat*4));const total=item.steps.length*beat*4;later(()=>{setPlaying(false);setActive([]);if(loop&&!stopFlag.current)playItem(item)},total+150)}
-   else{const sequence=item.rh.length?item.rh:item.notes||[];const stepMs=tab==='Runs & licks'?beat/2:beat;if(leftOnly){item.lh.forEach((n,i)=>later(()=>{if(!stopFlag.current)sound([n],0,Math.max(.25,stepMs*1.6/1000),'LH').catch(console.error)},i*stepMs))}else{sequence.forEach((n,i)=>later(()=>{if(!stopFlag.current)sound([n],0,Math.max(.25,stepMs*1.6/1000),'RH').catch(console.error)},i*stepMs))}later(()=>{setPlaying(false);setActive([]);if(loop&&!stopFlag.current)playItem(item)},(leftOnly?item.lh.length:sequence.length)*stepMs+250)}
-  }catch(e){setPlaying(false);alert(e instanceof Error?e.message:'Piano audio could not play.')}}
- function playChord(item:Lesson){stop();stopFlag.current=false;setSelected(item);setPlaying(true);if((tab==='Progressions'||tab==='Runs & licks')&&item.lh.length)sound(item.lh,0,1.2,'LH').catch(()=>{});else sound(item.rh,0,1.2,'RH').catch(()=>{});later(()=>{setPlaying(false);setActive([])},1400)}
- function stop(){stopFlag.current=true;timers.current.forEach(clearTimeout);timers.current=[];metroRef.current.forEach(clearTimeout);metroRef.current=[];voices.current.forEach(v=>{try{v.stop()}catch{}});voices.current=[];setPlaying(false);setActive([])}
- function startMetronome(){metroRef.current.forEach(clearTimeout);metroRef.current=[];const beat=60000/tempo;let count=0;const tick=()=>{if(!metronome)return;try{playMetronomeTick(count%4===0)}catch{}count++;metroRef.current.push(window.setTimeout(tick,beat))};tick()}
- useEffect(()=>{if(metronome)startMetronome();else{metroRef.current.forEach(clearTimeout);metroRef.current=[]}},[metronome,tempo]);
- const current=selected||data[0];
- const noteNames=Array.from({length:48},(_,i)=>note(36+i));
- return <div className="shell">
- <header className="topbar"><div className="brandmark">F♯</div><div className="brandtext"><b>JAZZCLASS</b><small>PIANO STUDY ROOM · KEY OF F♯</small></div><span className="top-pill">F♯ CENTRED</span></header>
- <section className="hero"><div><div className="kicker">LISTEN · SEE · PLAY</div><h1>Play the harmony.<br/><em>Not just the notes.</em></h1><p>Two-hand piano learning for jazz, gospel, worship and pop — with a responsive browser-generated piano voice.</p></div><div className="hero-meta"><span className="gold-dot"></span> {'BROWSER AUDIO ENGINE'}<small>Default tempo · 72 BPM</small></div></section>
- <nav className="tabs">{tabs.map(t=><button key={t} className={tab===t?'tab active':'tab'} onClick={()=>{stop();setTab(t);setSelected(null);setFilter('')}}>{t}</button>)}</nav>
- <main className="workspace"><section className="catalog"><div className="catalog-head"><div><h2>{tab==='Scales'?'Scales & chord families':tab==='Chords'?'Chords & harmonised scales':tab==='Progressions'?'Two-hand progressions':tab==='Passing chords'?'Passing chord library':'Runs & professional licks'}</h2><p>{tab==='Passing chords'?'50 practical passing-chord voicings with both hands.':tab==='Runs & licks'?'100 short connectors, fills and chord-tone licks.':'Select a lesson to see both hands; tap a lesson to hear it.'}</p></div><input value={filter} onChange={e=>setFilter(e.target.value)} placeholder="Find a lesson…" /></div>
- {tab==='Chords'&&<div className="toggle-row"><button className={showChordScale?'toggle on':'toggle'} onClick={()=>setShowChordScale(true)}>Show chord-scale families</button><button className={!showChordScale?'toggle on':'toggle'} onClick={()=>setShowChordScale(false)}>Chord voicings only</button></div>}
- <div className="cards">{data.map(item=><article key={item.id} className={'lesson-card '+(selected?.id===item.id?'chosen':'')} onClick={()=>{setSelected(item);playItem(item)}}><div className="card-line"><div><span className="category">{item.category}</span><h3>{item.title}</h3></div><button className="play-small" aria-label={'Play '+item.title} onClick={e=>{e.stopPropagation();playItem(item)}}>{playing&&selected?.id===item.id?'Ⅱ':'▶'}</button></div><p>{item.description}</p><div className="hand-preview">{(tab==='Progressions'||tab==='Runs & licks')?<span className="lh-chip">LH · {item.lh.slice(0,4).join('  ')}</span>:<span className="rh-chip">RH · {item.rh.slice(0,4).join('  ')}</span>}</div></article>)}</div>
- </section>
- <aside className="detail-panel"><div className="panel-kicker">LESSON & TWO-HAND VIEW</div>{current?<><div className="detail-title">{current.title}</div><div className="detail-category">{current.category}</div><p className="detail-desc">{current.description}</p><div className="hand-boxes">{(tab==='Progressions'||tab==='Runs & licks')?<div className="hand-box left"><b>LEFT HAND ONLY</b><div>{current.lh.join('  ·  ')}</div><small>Blue markers · left hand</small></div>:<div className="hand-box right"><b>RIGHT HAND · SCALE / CHORD</b><div>{current.rh.join('  ·  ')}</div><small>Chocolate markers · right hand</small></div>}</div>{current.steps&&<div className="steps"><b>CHORD-BY-CHORD MOVEMENT</b>{current.steps.map((s,i)=><button key={i} className="step" onClick={()=>playChord({ ...current,lh:s.lh,rh:s.rh})}><span>{String(i+1).padStart(2,'0')} · {s.name}</span><small>LH {s.lh.join(' + ')}</small><i>▶</i></button>)}</div>}<div className="tip-box"><b>PLAYING TIP</b><p>{current.tip}</p>{current.target&&<small>Suggested destination: {current.target}</small>}</div><div className="action-row"><button className="primary" onClick={()=>playItem(current)}>{playing?'PLAYING…':'▶ PLAY LESSON'}</button><button className="quiet" onClick={()=>playChord(current)}>Hear chord</button><button className="quiet" onClick={stop}>Stop</button></div></>:<div className="empty-state">Choose a lesson to see its notes, hand positions and playing advice.</div>}</aside></main>
- <section className="practice"><div className="practice-top"><div><div className="panel-kicker">LIVE PIANO · EVERY NOTE IS VISIBLE</div><h2>Practice keyboard</h2><p>White and black keys only. Blue = left hand · chocolate = right hand.</p></div><div className="audio-state">{'● WEB AUDIO PIANO'}</div></div>
- <div className="live-notes"><b>NOW PLAYING</b><div>{played.length?played.slice(0,18).map((n,i)=><span key={i} className={n.startsWith('L ')?'played-lh':n.startsWith('R ')?'played-rh':'played-both'}>{n}</span>):<small>Notes and chord tones will appear here as they sound.</small>}</div></div>
- <div className="keyboard" role="group" aria-label="Four octave piano keyboard">{Array.from({length:4},(_,oct)=>{const base=36+oct*12;const whitePcs=[0,2,4,5,7,9,11];const blackPcs=[1,3,6,8,10];return <div className="octave" key={oct}><div className="white-row">{whitePcs.map(pc=>{const n=note(base+pc);const hand=active.find(a=>a.endsWith(n));const is=!!hand;return <button key={n} className={'key white'+(is?(hand?.startsWith('L ')?' pressed-lh':hand?.startsWith('R ')?' pressed-rh':' pressed-gold'):'')} onPointerDown={()=>sound([n],0,.85,'RH').catch(e=>console.error(e))} title={'Play '+n}><span>{n}</span></button>})}</div>{blackPcs.map(pc=>{const n=note(base+pc);const pos=({1:1,3:2,6:4,8:5,10:6} as Record<number,number>)[pc];const hand=active.find(a=>a.endsWith(n));const is=!!hand;return <button key={n} className={'key black'+(is?(hand?.startsWith('L ')?' pressed-lh':hand?.startsWith('R ')?' pressed-rh':' pressed-gold'):'')} style={{left:(pos*100/7)+'%'}} onPointerDown={()=>sound([n],0,.85,'BOTH').catch(e=>console.error(e))} title={'Play '+n}>{is&&<i>{hand?.startsWith('L ')?'L':hand?.startsWith('R ')?'R':''}</i>}</button>})}</div>})}</div>
- <div className="controls"><label>TEMPO <strong>{tempo} BPM</strong><input type="range" min="48" max="120" value={tempo} onChange={e=>setTempo(+e.target.value)}/></label><label>TOUCH / VELOCITY <strong>{velocity}%</strong><input type="range" min="35" max="100" value={velocity} onChange={e=>setVelocity(+e.target.value)}/></label><label>OUTPUT <strong>{volume}%</strong><input type="range" min="10" max="100" value={volume} onChange={e=>setVolume(+e.target.value)}/></label><label className="check"><input type="checkbox" checked={loop} onChange={e=>setLoop(e.target.checked)}/> Loop lesson</label><label className="check"><input type="checkbox" checked={metronome} onChange={e=>setMetronome(e.target.checked)}/> Metronome</label><button className="quiet" onClick={stop}>■ Stop playback</button></div>
- <div className="footnote">Piano tones are generated locally with the Web Audio API — no samples or piano plug-in are downloaded. Audio starts after your first interaction, as required by browser autoplay rules.</div></section>
- <footer>JAZZCLASS · F♯ PIANO LAB <span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
- </div>
+const TABS = [
+  { id: 'notes', label: 'Notes' },
+  { id: 'scales', label: 'Scales' },
+  { id: 'chords', label: 'Chords & Harmony' },
+  { id: 'progressions', label: 'Progressions' },
+  { id: 'arpeggios', label: 'Arpeggios' },
+  { id: 'runs', label: 'Runs' },
+  { id: 'tips', label: 'Tips' },
+] as const;
+type Tab = typeof TABS[number]['id'];
+
+const noteLessons: Lesson[] = keyNotes.map((n, i) => ({
+  id: 'note-' + i, title: n.name + ' · ' + n.degree, sub: n.label,
+  category: 'F♯ major · scale degree', feel: n.role,
+  notes: [n.midi], rh: [n.name + '4'], lh: [], bpm: 72,
+  tip: n.role + ' Play it, listen to its relationship with F♯, then use it to build a short phrase.',
+}));
+
+const descriptions: Record<Tab, { title: string; copy: string }> = {
+  notes: { title: 'The notes of F♯', copy: 'Learn the seven notes of the F♯ major scale and understand the role each degree plays.' },
+  scales: { title: 'Scales in F♯', copy: 'Major, minor, modes, pentatonics and blues. Play every scale in a clean, ascending register.' },
+  chords: { title: 'Chords & harmony', copy: 'Explore F♯ chord voicings, harmonised scale families and the sound of each chord quality.' },
+  progressions: { title: 'Progressions', copy: 'Practical pop, worship, praise, gospel, jazz and blues movements. These examples are presented as left-hand foundations.' },
+  arpeggios: { title: 'Arpeggios', copy: 'Hear chord tones one at a time, moving smoothly up and back down.' },
+  runs: { title: 'Runs & licks', copy: 'Short musical connectors, chord-tone phrases and tasteful fills. Left-hand examples only.' },
+  tips: { title: 'Practice notes', copy: 'Practical advice for touch, timing, harmony and developing a musical feel.' },
+};
+
+export default function App() {
+  const [tab, setTab] = useState<Tab>('notes');
+  const [selection, setSelection] = useState<Lesson | null>(null);
+  const [query, setQuery] = useState('');
+  const [tempo, setTempo] = useState(72);
+  const [velocity, setVelocity] = useState(50);
+  const [volume, setVolume] = useState(75);
+  const [loop, setLoop] = useState(false);
+  const [metronome, setMetronome] = useState(false);
+  const [showFamilies, setShowFamilies] = useState(true);
+  const [liveNotes, setLiveNotes] = useState<number[]>([]);
+  const [playedNotes, setPlayedNotes] = useState<number[]>([]);
+  const { playing, stepIndex, stepNotes, stepLabel, play, stop } = usePlayback();
+
+  const data = useMemo(() => {
+    let items: Lesson[] = [];
+    if (tab === 'notes') items = noteLessons;
+    if (tab === 'scales') items = scales;
+    if (tab === 'chords') items = [...chords, ...(showFamilies ? chordScales : [])];
+    if (tab === 'progressions') items = progressions;
+    if (tab === 'arpeggios') items = arpeggios;
+    if (tab === 'runs') items = runs;
+    const q = query.trim().toLowerCase();
+    return q ? items.filter(x => [x.title, x.sub, x.category, x.feel, x.tip].join(' ').toLowerCase().includes(q)) : items;
+  }, [tab, query, showFamilies]);
+
+  useEffect(() => {
+    if (!metronome) return;
+    let count = 0;
+    let timer = 0;
+    const tick = () => {
+      playMetronomeTick(count % 4 === 0);
+      count += 1;
+      timer = window.setTimeout(tick, 60000 / tempo);
+    };
+    void unlockAudio().then(tick);
+    return () => window.clearTimeout(timer);
+  }, [metronome, tempo]);
+
+  useEffect(() => () => closeAudio(), []);
+
+  const stopPlayback = () => {
+    stop();
+    setLiveNotes([]);
+  };
+
+  const handlePlay = async (item: Lesson) => {
+    if (playing && selection?.id === item.id) {
+      stopPlayback();
+      return;
+    }
+    stopPlayback();
+    setSelection(item);
+    setPlayedNotes([]);
+    const isLeftOnly = tab === 'progressions' || tab === 'runs';
+    const sourceSteps = item.steps?.length
+      ? item.steps.map(s => ({ notes: (isLeftOnly ? s.lh : s.rh).map(midi), beats: s.beats ?? 2, label: s.name }))
+      : (isLeftOnly ? item.lh : item.rh).map((n, i) => ({ notes: [midi(n)], beats: tab === 'runs' ? 0.5 : 0.5, label: n }));
+    const playable = { id: item.id, title: item.title, sub: item.sub ?? '', bpm: tempo, loop, steps: sourceSteps };
+    await unlockAudio();
+    play(playable, (notes) => {
+      setLiveNotes(notes);
+      setPlayedNotes(old => [...notes, ...old].slice(0, 28));
+    }, () => setLiveNotes([]), velocity / 100 * volume / 100);
+  };
+
+  const handleKey = async (m: number) => {
+    await unlockAudio();
+    playNote(m, { duration: 1.5, velocity: velocity / 100 * volume / 100 });
+    setLiveNotes([m]);
+    setPlayedNotes(old => [m, ...old].slice(0, 28));
+    window.setTimeout(() => setLiveNotes(old => old.filter(n => n !== m)), 900);
+  };
+
+  const active = playing && stepNotes.length ? stepNotes : liveNotes;
+  const current = selection ?? data[0] ?? null;
+  const header = descriptions[tab];
+
+  return <div className="studio-shell">
+    <header className="studio-header">
+      <div className="brand-lockup"><span className="brand-mark">F♯</span><span><b>JAZZCLASS</b><small>PIANO STUDIO · ONE KEY ONLY</small></span></div>
+      <span className="header-pill"><i /> F♯ CENTRED</span>
+    </header>
+
+    <section className="hero">
+      <div className="hero-kicker"><i /> PIANO STUDIO · ONE KEY ONLY</div>
+      <h1>Learn piano<br /><em>in F♯</em></h1>
+      <p>Notes, every scale, chords and harmony, pop, worship, praise, gospel and jazz progressions, arpeggios and short musical runs — all in F♯, all on the keyboard below.</p>
+      <div className="hero-foot"><span>LISTEN · SEE · PLAY</span><span>DEFAULT TEMPO · 72 BPM</span></div>
+    </section>
+
+    <TabBar tabs={TABS as readonly {id:string;label:string}[]} active={tab} onChange={(id) => {
+      stopPlayback(); setTab(id as Tab); setSelection(null); setQuery('');
+    }} />
+
+    <main className="studio-main">
+      <section className="catalog">
+        <div className="catalog-heading">
+          <SectionIntro title={header.title} copy={header.copy} meta={data.length + ' LESSONS'} />
+          {tab !== 'tips' && <input className="lesson-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a lesson…" aria-label="Find a lesson" />}
+        </div>
+        {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
+        {tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
+          <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} />)}</div>}
+        {!data.length && tab !== 'tips' && <div className="empty-state">No lessons match that search.</div>}
+      </section>
+
+      <aside className="lesson-detail">
+        <div className="detail-kicker">LESSON DETAILS</div>
+        {current ? <>
+          <h2>{current.title}</h2><span className="detail-sub">{current.sub || current.category}</span>
+          <p className="detail-copy">{current.feel}</p>
+          {(tab === 'progressions' || tab === 'runs') ? <div className="hand-card left-hand"><b>LEFT HAND</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Left-hand notes · blue markers</small></div> :
+            <div className="hand-card right-hand"><b>RIGHT HAND</b><p>{current.rh.join('  ·  ') || current.notes?.join(' · ') || '—'}</p><small>Scale and chord notes · chocolate markers</small></div>}
+          {current.steps?.length ? <div className="step-list"><b>CHORD-BY-CHORD MOVEMENT</b>{current.steps.map((step, i) => <div className={'step-row ' + (stepIndex === i ? 'step-active' : '')} key={step.name}><span>{String(i + 1).padStart(2, '0')} · {step.name}</span><small>LH {step.lh.join(' + ')}</small></div>)}</div> : null}
+          <div className="playing-tip"><b>PLAYING TIP</b><p>{current.tip}</p>{current.target && <small>Suggested destination: {current.target}</small>}</div>
+          <div className="detail-actions"><button className="play-primary" onClick={() => void handlePlay(current)}>{playing && selection?.id === current.id ? 'Ⅱ PAUSE / STOP' : '▶ PLAY LESSON'}</button><button className="stop-button" onClick={stopPlayback}>■ Stop</button></div>
+        </> : <div className="empty-state">Choose a lesson to see its notes, hand position and practice advice.</div>}
+      </aside>
+    </main>
+
+    <section className="practice-panel">
+      <div className="practice-heading"><div><div className="detail-kicker">LIVE PIANO · EVERY NOTE IS VISIBLE</div><h2>Practice keyboard</h2><p>White and black keys only. Blue = left hand · chocolate = right hand · amber = free play.</p></div><span className="audio-badge"><i /> BROWSER AUDIO ENGINE</span></div>
+      <div className="now-playing"><b>NOW PLAYING</b><div>{playedNotes.length ? playedNotes.map((n, i) => <span key={i} className={active.includes(n) ? 'note-chip active-chip' : 'note-chip'}>{note(n)}</span>) : <small>Notes and chord tones will appear here as they sound.</small>}</div></div>
+      <div className="practice-controls">
+        <label>TEMPO <strong>{tempo} BPM</strong><input type="range" min="48" max="120" value={tempo} onChange={e => setTempo(+e.target.value)} /></label>
+        <label>TOUCH / VELOCITY <strong>{velocity}%</strong><input type="range" min="20" max="100" value={velocity} onChange={e => setVelocity(+e.target.value)} /></label>
+        <label>OUTPUT <strong>{volume}%</strong><input type="range" min="10" max="100" value={volume} onChange={e => setVolume(+e.target.value)} /></label>
+        <label className="check-control"><input type="checkbox" checked={loop} onChange={e => setLoop(e.target.checked)} /> Loop lesson</label>
+        <label className="check-control"><input type="checkbox" checked={metronome} onChange={e => setMetronome(e.target.checked)} /> Metronome</label>
+        <button className="stop-button" onClick={stopPlayback}>■ Stop playback</button>
+      </div>
+      <p className="audio-footnote">Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
+    </section>
+
+    <footer className="studio-footer"><b>JAZZCLASS · F♯ PIANO STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
+    <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} playing={playing} onKey={handleKey} onStop={stopPlayback} />
+  </div>;
 }

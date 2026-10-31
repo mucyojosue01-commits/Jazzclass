@@ -44,7 +44,11 @@ export default function App() {
   const [volume, setVolume] = useState(75);
   const [loop, setLoop] = useState(false);
   const [metronome, setMetronome] = useState(false);
-  const [showFamilies, setShowFamilies] = useState(true);\n  const [scaleMode, setScaleMode] = useState<'notes'|'harmonized'>('notes');\n  const [scaleQuality, setScaleQuality] = useState<'major'|'minor'|'sus2'|'sus4'>('major');\n  const [progressionMode, setProgressionMode] = useState<'standard'|'slash'>('standard');\n  const [genre, setGenre] = useState('All');
+  const [showFamilies, setShowFamilies] = useState(true);
+  const [scaleMode, setScaleMode] = useState<'notes'|'harmonized'>('notes');
+  const [scaleQuality, setScaleQuality] = useState<'major'|'minor'|'sus2'|'sus4'>('major');
+  const [progressionMode, setProgressionMode] = useState<'standard'|'slash'>('standard');
+  const [genre, setGenre] = useState('All');
   const [liveNotes, setLiveNotes] = useState<number[]>([]);
   const [playedNotes, setPlayedNotes] = useState<number[]>([]);
   const { playing, stepIndex, stepNotes, stepLabel, play, stop } = usePlayback();
@@ -52,7 +56,12 @@ export default function App() {
   const data = useMemo(() => {
     let items: Lesson[] = [];
     if (tab === 'notes') items = noteLessons;
-    if (tab === 'scales') items = scaleMode === 'notes' ? scales : scales.filter(s => s.id === 'scale-0' || s.id === 'scale-1').map(s => {\n      const pcs = (s.notes as string[]).map(n => ({C:0,'C♯':1,D:2,'D♯':3,E:4,F:5,'F♯':6,G:7,'G♯':8,A:9,'A♯':10,B:11} as Record<string,number>)[n] ?? 0);\n      const intervals = scaleQuality === 'major' ? [0,4,7] : scaleQuality === 'minor' ? [0,3,7] : scaleQuality === 'sus2' ? [0,2,7] : [0,5,7];\n      const steps = pcs.map((p,i) => { let root=54+((p-6+12)%12); if(i>0 && root < 54) root += 12; const chord=intervals.map(v => note(root+v)); return {name: s.title.replace(' harmonised','')+' · degree '+(i+1),lh:[],rh:chord,beats:1.5}; });\n      return {...s,id:s.id+'-harm-'+scaleQuality,title:s.title+' · '+scaleQuality.toUpperCase()+' chords',category:'Harmonised scale · '+scaleQuality,description:'Each scale degree is voiced as a '+scaleQuality+' chord. All right-hand chord tones sound simultaneously.',lh:[],rh:steps[0].rh,steps,notes:steps.map(x=>x.name)};\n    });
+    if (tab === 'scales') items = scaleMode === 'notes' ? scales : scales.filter(s => s.id === 'scale-0' || s.id === 'scale-1').map(s => {
+      const pcs = (s.notes as string[]).map(n => ({C:0,'C♯':1,D:2,'D♯':3,E:4,F:5,'F♯':6,G:7,'G♯':8,A:9,'A♯':10,B:11} as Record<string,number>)[n] ?? 0);
+      const intervals = scaleQuality === 'major' ? [0,4,7] : scaleQuality === 'minor' ? [0,3,7] : scaleQuality === 'sus2' ? [0,2,7] : [0,5,7];
+      const steps = pcs.map((p,i) => { let root=54+((p-6+12)%12); if(i>0 && root < 54) root += 12; const chord=intervals.map(v => note(root+v)); return {name: s.title.replace(' harmonised','')+' · degree '+(i+1),lh:[],rh:chord,beats:1.5}; });
+      return {...s,id:s.id+'-harm-'+scaleQuality,title:s.title+' · '+scaleQuality.toUpperCase()+' chords',category:'Harmonised scale · '+scaleQuality,description:'Each scale degree is voiced as a '+scaleQuality+' chord. All right-hand chord tones sound simultaneously.',lh:[],rh:steps[0].rh,steps,notes:steps.map(x=>x.name)};
+    });
     if (tab === 'chords') items = [...chords, ...harmonies, ...(showFamilies ? chordScales : [])];
     if (tab === 'progressions') items = (progressionMode === 'slash' ? slashChords : progressions).filter(x => genre === 'All' || x.category === genre);
     if (tab === 'arpeggios') items = arpeggios;
@@ -101,7 +110,13 @@ export default function App() {
     }, () => setLiveNotes([]), velocity / 100 * volume / 100);
   };
 
-  const handleStep = async (item: Lesson, index: number) => {\n    const step=item.steps?.[index]; if(!step)return; stopPlayback(); setSelection(item); await unlockAudio();\n    const notes=(tab==='progressions'||tab==='chords')?[...step.lh,...step.rh]:tab==='runs'?step.lh:step.rh;\n    play({id:item.id+'-step-'+index,title:item.title,sub:step.name,bpm:tempo,loop:false,steps:[{notes:notes.map(midi),beats:2,label:step.name}]},setLiveNotes,()=>setLiveNotes([]),velocity/100*volume/100);\n  };\n\n  const handleKey = async (m: number) => {
+  const handleStep = async (item: Lesson, index: number) => {
+    const step=item.steps?.[index]; if(!step)return; stopPlayback(); setSelection(item); await unlockAudio();
+    const notes=(tab==='progressions'||tab==='chords')?[...step.lh,...step.rh]:tab==='runs'?step.lh:step.rh;
+    play({id:item.id+'-step-'+index,title:item.title,sub:step.name,bpm:tempo,loop:false,steps:[{notes:notes.map(midi),beats:2,label:step.name}]},setLiveNotes,()=>setLiveNotes([]),velocity/100*volume/100);
+  };
+
+  const handleKey = async (m: number) => {
     await unlockAudio();
     playNote(m, { duration: 1.5, velocity: velocity / 100 * volume / 100 });
     setLiveNotes([m]);
@@ -136,7 +151,9 @@ export default function App() {
           <SectionIntro title={header.title} copy={header.copy} meta={data.length + ' LESSONS'} />
           {tab !== 'tips' && <input className="lesson-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a lesson…" aria-label="Find a lesson" />}
         </div>
-        {tab === 'scales' && <div className="family-switch"><button className={scaleMode==='notes'?'selected':''} onClick={()=>setScaleMode('notes')}>Single notes</button><button className={scaleMode==='harmonized'?'selected':''} onClick={()=>setScaleMode('harmonized')}>Harmonised chords</button>{scaleMode==='harmonized' && <select value={scaleQuality} onChange={e=>setScaleQuality(e.target.value as typeof scaleQuality)}><option value="major">Major</option><option value="minor">Minor</option><option value="sus2">Sus2</option><option value="sus4">Sus4</option></select>}</div>}\n        {tab === 'progressions' && <div className="family-switch"><button className={progressionMode==='standard'?'selected':''} onClick={()=>{setProgressionMode('standard');setGenre('All')}}>Chord progressions</button><button className={progressionMode==='slash'?'selected':''} onClick={()=>{setProgressionMode('slash');setGenre('All')}}>Slash chords</button><select value={genre} onChange={e=>setGenre(e.target.value)}>{['All','Jazz','Worship','Praise','Gospel'].map(g=><option key={g}>{g}</option>)}</select></div>}\n        {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
+        {tab === 'scales' && <div className="family-switch"><button className={scaleMode==='notes'?'selected':''} onClick={()=>setScaleMode('notes')}>Single notes</button><button className={scaleMode==='harmonized'?'selected':''} onClick={()=>setScaleMode('harmonized')}>Harmonised chords</button>{scaleMode==='harmonized' && <select value={scaleQuality} onChange={e=>setScaleQuality(e.target.value as typeof scaleQuality)}><option value="major">Major</option><option value="minor">Minor</option><option value="sus2">Sus2</option><option value="sus4">Sus4</option></select>}</div>}
+        {tab === 'progressions' && <div className="family-switch"><button className={progressionMode==='standard'?'selected':''} onClick={()=>{setProgressionMode('standard');setGenre('All')}}>Chord progressions</button><button className={progressionMode==='slash'?'selected':''} onClick={()=>{setProgressionMode('slash');setGenre('All')}}>Slash chords</button><select value={genre} onChange={e=>setGenre(e.target.value)}>{['All','Jazz','Worship','Praise','Gospel'].map(g=><option key={g}>{g}</option>)}</select></div>}
+        {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
         {tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
           <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} />)}</div>}
         {!data.length && tab !== 'tips' && <div className="empty-state">No lessons match that search.</div>}

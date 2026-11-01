@@ -172,7 +172,7 @@ export default function App() {
     </header>
 
     <section className="hero">
-      <div className="hero-kicker"><i /> PIANO STUDIO · ONE KEY ONLY</div>
+      <div className="hero-kicker"><i /> PIANO STUDIO · ALL 12 KEYS</div>
       <h1>Understand music.<br /><em>Play every key.</em></h1>
       <p>Explore all 12 keys, scales, chords, inversions, voicings, harmony, progressions, arpeggios and professional musical vocabulary.</p>
       <div className="hero-foot"><span>LISTEN · SEE · PLAY</span><span>DEFAULT TEMPO · 72 BPM</span></div>

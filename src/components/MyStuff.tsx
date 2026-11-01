@@ -1,60 +1,37 @@
-import { useMemo, useState } from 'react';
-import type { PersonalStudyData, StudyStatus } from '../lib/studyTracker';
-import { isDueForReview, setStudyStatus } from '../lib/studyTracker';
+import {useMemo,useState} from 'react';
+import type {PersonalStudyData,StudyStatus} from '../lib/studyTracker';
+import {completeStudy,isDueForReview,markForReview} from '../lib/studyTracker';
+import {supabase} from '../lib/supabaseClient';
 type Item={id:string;title:string;category:string};
-type Props={items:Item[];value:PersonalStudyData;onChange:(next:PersonalStudyData)=>void;onOpen:(id:string)=>void};
-const box:React.CSSProperties={border:'1px solid rgba(255,255,255,.09)',borderRadius:14,background:'#111114',padding:15};
-const small:React.CSSProperties={fontSize:11,color:'rgba(245,240,230,.5)'};
-const date=(value:string|null)=>value?new Date(value).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'Not yet';
-export default function MyStuff({items,value,onChange,onOpen}:Props){
- const [folderName,setFolderName]=useState('');
- const [activeFolder,setActiveFolder]=useState('all');
- const [notice,setNotice]=useState('');
- const itemMap=useMemo(()=>new Map(items.map(item=>[item.id,item])),[items]);
- const favoriteIds=Object.keys(value.favorites);
- const favorites=items.filter(item=>Object.prototype.hasOwnProperty.call(value.favorites,item.id));
- const visibleFavorites=favorites.filter(item=>activeFolder==='all'||(value.favorites[item.id]??'folder-default')===activeFolder);
- const records=Object.entries(value.progress).map(([id,record])=>({item:itemMap.get(id),id,record})).filter(x=>x.item);
- const mastered=records.filter(x=>x.record.status==='mastered');
- const learning=records.filter(x=>x.record.status==='learning');
- const due=records.filter(x=>isDueForReview(x.record));
- const totalSessions=records.reduce((sum,x)=>sum+x.record.sessions,0);
- const addFolder=()=>{
-  const name=folderName.trim();
-  if(!name)return;
-  if(value.folders.some(f=>f.name.toLowerCase()===name.toLowerCase())){setNotice('A folder with that name already exists.');return;}
-  onChange({...value,folders:[...value.folders,{id:'folder-'+Date.now().toString(36),name,createdAt:new Date().toISOString()}]});
-  setFolderName('');setNotice('Folder created.');
- };
- const removeFolder=(id:string)=>{
-  if(id==='folder-default')return;
-  const favoritesNext={...value.favorites};
-  Object.keys(favoritesNext).forEach(key=>{if(favoritesNext[key]===id)favoritesNext[key]='folder-default';});
-  onChange({...value,folders:value.folders.filter(f=>f.id!==id),favorites:favoritesNext});
- };
+type Props={items:Item[];value:PersonalStudyData;onChange:(next:PersonalStudyData)=>void;onOpen:(id:string)=>void;syncStatus:string;userEmail:string|null;onAuthChange:()=>void};
+const date=(v:string|null)=>v?new Date(v).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'Not yet';
+export default function MyStuff({items,value,onChange,onOpen,syncStatus,userEmail,onAuthChange}:Props){
+ const [folderName,setFolderName]=useState('');const [activeFolder,setActiveFolder]=useState('all');const [notice,setNotice]=useState('');const [email,setEmail]=useState('');const [authBusy,setAuthBusy]=useState(false);const [confidence,setConfidence]=useState<Record<string,number>>({});
+ const itemMap=useMemo(()=>new Map(items.map(x=>[x.id,x])),[items]);
+ const favorites=items.filter(x=>Object.hasOwn(value.favorites,x.id));
+ const inFolder=(id:string,folder:string)=>folder==='all'||(value.favorites[id]??[]).includes(folder);
+ const visible=favorites.filter(x=>inFolder(x.id,activeFolder));
+ const records=Object.entries(value.progress).map(([id,record])=>({id,record,item:itemMap.get(id)})).filter(x=>x.item).sort((a,b)=>(b.record.lastPracticed??'').localeCompare(a.record.lastPracticed??''));
+ const counts={notStarted:items.filter(x=>!value.progress[x.id]||value.progress[x.id].status==='not_started').length,learning:records.filter(x=>x.record.status==='in_progress').length,completed:records.filter(x=>x.record.status==='completed').length,due:records.filter(x=>isDueForReview(x.record)).length};
+ const addFolder=()=>{const name=folderName.trim();if(!name){setNotice('Enter a folder name first.');return;}if(value.folders.some(f=>f.name.toLowerCase()===name.toLowerCase())){setNotice('That folder already exists.');return;}const id='folder-'+(typeof crypto!=='undefined'&&'randomUUID'in crypto?crypto.randomUUID():Date.now().toString(36));onChange({...value,folders:[...value.folders,{id,name,createdAt:new Date().toISOString()}]});setFolderName('');setNotice('Folder created.');setActiveFolder(id);};
+ const removeFolder=(id:string)=>{if(id==='folder-default')return;const favoritesNext={...value.favorites};for(const key of Object.keys(favoritesNext)){const next=favoritesNext[key].filter(x=>x!==id);favoritesNext[key]=next.length?next:['folder-default'];}onChange({...value,folders:value.folders.filter(f=>f.id!==id),favorites:favoritesNext});if(activeFolder===id)setActiveFolder('all');};
+ const toggleMembership=(itemId:string,folderId:string)=>{const current=value.favorites[itemId]??['folder-default'];let next=current.includes(folderId)?current.filter(x=>x!==folderId):[...current,folderId];if(folderId==='folder-default'&&next.length>1)next=next.filter(x=>x!=='folder-default');if(!next.length)next=['folder-default'];onChange({...value,favorites:{...value.favorites,[itemId]:next}});};
  const removeFavorite=(id:string)=>{const next={...value.favorites};delete next[id];onChange({...value,favorites:next});};
- const moveFavorite=(id:string,folderId:string)=>onChange({...value,favorites:{...value.favorites,[id]:folderId}});
- const statusLabel=(status:StudyStatus)=>status==='mastered'?'Mastered':status==='review'?'Needs review':'Learning';
+ const saveCompletion=(id:string)=>onChange(completeStudy(value,id,confidence[id]??3));
+ const statusLabel=(s:StudyStatus)=>({not_started:'Not started',in_progress:'In progress',completed:'Completed',review:'Review'}[s]);
+ const signIn=async()=>{if(!supabase)return;const address=email.trim();if(!address||!address.includes('@')){setNotice('Enter a valid email address.');return;}setAuthBusy(true);const {error}=await supabase.auth.signInWithOtp({email:address,options:{emailRedirectTo:window.location.origin}});setAuthBusy(false);setNotice(error?error.message:'A sign-in link has been sent. Open it on this device to sync your JazzClass workspace.');};
+ const signOut=async()=>{if(supabase)await supabase.auth.signOut();onAuthChange();};
  return <div className="my-stuff">
-  <div className="my-stuff-hero"><div><span className="detail-kicker">YOUR PRIVATE PRACTICE SPACE</span><h2>My Stuff</h2><p>Keep your favorite progressions organized and see what you have learned, what needs work and what is ready for review.</p></div><span className="my-stuff-mark">♬</span></div>
-  <div className="my-stats">
-   <article><strong>{favoriteIds.length}</strong><span>FAVORITES</span></article>
-   <article><strong>{mastered.length}</strong><span>MASTERED</span></article>
-   <article><strong>{learning.length}</strong><span>IN PROGRESS</span></article>
-   <article><strong>{due.length}</strong><span>DUE TO REVIEW</span></article>
-   <article><strong>{totalSessions}</strong><span>PRACTICE STARTS</span></article>
-  </div>
-  <section className="my-stuff-section">
-   <div className="my-section-heading"><div><h3>Favorite folders</h3><p>Save progressions and arrange them into your own collections.</p></div></div>
-   <div className="folder-create"><input value={folderName} onChange={e=>setFolderName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')addFolder();}} placeholder="New folder name…" maxLength={36}/><button onClick={addFolder}>＋ Create folder</button></div>
-   {notice&&<p className="my-notice">{notice}</p>}
-   <div className="folder-tabs"><button className={activeFolder==='all'?'selected':''} onClick={()=>setActiveFolder('all')}>All favorites <span>{favorites.length}</span></button>{value.folders.map(folder=><div className="folder-tab-wrap" key={folder.id}><button className={activeFolder===folder.id?'selected':''} onClick={()=>setActiveFolder(folder.id)}>▱ {folder.name}<span>{favorites.filter(item=>(value.favorites[item.id]??'folder-default')===folder.id).length}</span></button>{folder.id!=='folder-default'&&<button className="folder-remove" title={'Delete '+folder.name} onClick={()=>removeFolder(folder.id)}>×</button>}</div>)}</div>
-   {visibleFavorites.length?<div className="my-item-list">{visibleFavorites.map(item=><article className="my-item" key={item.id}><div className="my-item-main"><span>{item.category}</span><h4>{item.title}</h4><button className="my-open" onClick={()=>onOpen(item.id)}>Open progression →</button></div><div className="my-item-actions"><select aria-label={'Move '+item.title+' to folder'} value={value.favorites[item.id]??'folder-default'} onChange={e=>moveFavorite(item.id,e.target.value)}>{value.folders.map(folder=><option key={folder.id} value={folder.id}>{folder.name}</option>)}</select><button className="my-remove" onClick={()=>removeFavorite(item.id)}>Remove</button></div></article>)}</div>:<div className="my-empty">No favorites in this folder yet. Use the ☆ button on a progression to save it here.</div>}
+  <header className="my-stuff-hero"><div><span className="detail-kicker">PERSONAL PRACTICE SPACE</span><h2>My Stuff</h2><p>Save progressions, organize collections and track what you can play confidently.</p></div><span className="my-stuff-mark">♬</span></header>
+  <section className="my-sync-panel"><div><strong>{userEmail?'Cloud sync connected':'Save across devices'}</strong><p>{userEmail?userEmail:'Sign in with your email to back up favorites and study progress to your JazzClass account.'}</p><small>{syncStatus}</small></div>{userEmail?<button onClick={()=>void signOut()}>Sign out</button>:<div className="my-auth-form"><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Your email address"/><button disabled={authBusy} onClick={()=>void signIn()}>{authBusy?'Sending…':'Email sign-in link'}</button></div>}</section>
+  <div className="my-stats"><article><strong>{favorites.length}</strong><span>FAVORITES</span></article><article><strong>{counts.notStarted}</strong><span>NOT STARTED</span></article><article><strong>{counts.learning}</strong><span>IN PROGRESS</span></article><article><strong>{counts.completed}</strong><span>COMPLETED</span></article><article><strong>{counts.due}</strong><span>REVIEW DUE</span></article></div>
+  <section className="my-stuff-section"><div className="my-section-heading"><div><h3>Favorite folders</h3><p>One progression can belong to several folders.</p></div></div><div className="folder-create"><input value={folderName} onChange={e=>setFolderName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addFolder()} placeholder="Name your folder" maxLength={36}/><button onClick={addFolder}>＋ Create folder</button></div>{notice&&<p className="my-notice" role="status">{notice}</p>}
+   <div className="folder-tabs"><button className={activeFolder==='all'?'selected':''} onClick={()=>setActiveFolder('all')}>All <span>{favorites.length}</span></button>{value.folders.map(f=><div className="folder-tab-wrap" key={f.id}><button className={activeFolder===f.id?'selected':''} onClick={()=>setActiveFolder(f.id)}>{f.name}<span>{favorites.filter(x=>(value.favorites[x.id]??[]).includes(f.id)).length}</span></button>{f.id!=='folder-default'&&<button className="folder-remove" onClick={()=>removeFolder(f.id)} aria-label={'Delete '+f.name}>×</button>}</div>)}</div>
+   {visible.length?<div className="my-item-list">{visible.map(item=><article className="my-item" key={item.id}><div className="my-item-main"><span>{item.category}</span><h4>{item.title}</h4><button className="my-open" onClick={()=>onOpen(item.id)}>Open progression →</button></div><div className="my-item-actions"><details className="folder-membership"><summary>Folders ({(value.favorites[item.id]??[]).length})</summary><div>{value.folders.map(f=><label key={f.id}><input type="checkbox" checked={(value.favorites[item.id]??[]).includes(f.id)} onChange={()=>toggleMembership(item.id,f.id)}/>{f.name}</label>)}</div></details><button className="my-remove" onClick={()=>removeFavorite(item.id)}>Remove</button></div></article>)}</div>:<div className="my-empty">Nothing saved in this folder yet. Use the star on a progression to add it.</div>}
   </section>
-  <section className="my-stuff-section">
-   <div className="my-section-heading"><div><h3>Learning progress</h3><p>Your study history, mastery status and spaced-review schedule.</p></div></div>
-   {records.length?<div className="my-item-list">{records.sort((a,b)=>(b.record.lastPracticed??'').localeCompare(a.record.lastPracticed??'')).map(({id,item,record})=><article className="my-item progress-item" key={id}><div className="my-item-main"><span>{item!.category} · {record.sessions} practice starts · {record.completedSessions} completed</span><h4>{item!.title}</h4><p>Last practiced: {date(record.lastPracticed)}{record.nextReviewAt?' · Next review: '+date(record.nextReviewAt):''}</p><button className="my-open" onClick={()=>onOpen(id)}>Continue studying →</button></div><div className="my-item-actions"><select className="progress-status-select" aria-label={'Study status for '+item!.title} value={record.status} onChange={e=>onChange(setStudyStatus(value,id,e.target.value as StudyStatus,Math.max(1,record.confidence||3)))}><option value="learning">Learning</option><option value="review">Needs review</option><option value="mastered">Mastered</option></select>{isDueForReview(record)&&<span className="due-pill">Review due</span>}</div></article>)}</div>:<div className="my-empty">Your study record will appear here when you start practicing progressions. Mark a progression as mastered when you can play it confidently without assistance.</div>}
+  <section className="my-stuff-section"><div className="my-section-heading"><div><h3>Study tracker</h3><p>Started work, completed practice and scheduled revision.</p></div></div>
+   {records.length?<div className="my-item-list">{records.map(({id,item,record})=><article className="my-item progress-item" key={id}><div className="my-item-main"><span>{item!.category} · {record.sessions} starts · {record.completedSessions} full sessions</span><h4>{item!.title}</h4><p>{statusLabel(record.status)} · Last practiced {date(record.lastPracticed)}{record.nextReviewAt?' · Review '+date(record.nextReviewAt):''}</p><button className="my-open" onClick={()=>onOpen(id)}>Practice →</button></div><div className="my-item-actions"><select value={record.status} aria-label={'Study status for '+item!.title} onChange={e=>{const status=e.target.value as StudyStatus;if(status==='completed')saveCompletion(id);else if(status==='review')onChange(markForReview(value,id));else onChange({...value,progress:{...value.progress,[id]:{...record,status,nextReviewAt:null}}});}}><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="review">Review</option></select>{record.status==='in_progress'&&<button onClick={()=>saveCompletion(id)}>Mark completed</button>}{record.status==='completed'&&<label className="confidence-control">Confidence<select value={confidence[id]??record.confidence??3} onChange={e=>setConfidence({...confidence,[id]:+e.target.value})}><option value={1}>1 · Hard</option><option value={2}>2 · Developing</option><option value={3}>3 · Good</option><option value={4}>4 · Strong</option><option value={5}>5 · Easy</option></select></label>}{isDueForReview(record)&&<span className="due-pill">Review due</span>}</div></article>)}</div>:<div className="my-empty">Your studies appear here when you begin a progression. Starting playback marks it in progress; finishing the full progression records a completed practice session. You decide when you have mastered it.</div>}
   </section>
-  <p className="my-privacy">Your favorites and study history are saved privately in this browser on this device. Clearing browser data or switching devices can remove or leave this data behind; account sync can be added when you enable a sign-in method.</p>
+  <p className="my-privacy">{userEmail?'Your workspace is stored in your JazzClass account and cached on this device.':'Your data is saved on this device until you sign in. Sign in to back it up and sync it across devices.'}</p>
  </div>;
 }

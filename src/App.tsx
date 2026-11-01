@@ -10,6 +10,8 @@ import SectionIntro from './components/SectionIntro';
 import usePlayback from './hooks/usePlayback';
 import TheoryLab from './components/TheoryLab';
 import KnowledgeLibrary from './components/KnowledgeLibrary';
+import MyStuff from './components/MyStuff';
+import { loadPersonalStudyData, savePersonalStudyData, recordPractice, type PersonalStudyData } from './lib/studyTracker';
 
 const TABS = [
   { id: 'theory', label: 'Theory Lab' },
@@ -17,6 +19,7 @@ const TABS = [
   { id: 'scales', label: 'Scales' },
   { id: 'chords', label: 'Chords & Harmony' },
   { id: 'progressions', label: 'Progressions' },
+  { id: 'my-stuff', label: 'My Stuff' },
   { id: 'arpeggios', label: 'Arpeggios' },
   { id: 'runs', label: 'Runs' },
   { id: 'tips', label: 'Tips' },
@@ -41,10 +44,12 @@ const descriptions: Record<Tab, { title: string; copy: string }> = {
   runs: { title: 'Runs & licks', copy: 'Short musical connectors, chord-tone phrases and tasteful fills. Left-hand examples only.' },
   tips: { title: 'Practice notes', copy: 'Practical advice for touch, timing, harmony and developing a musical feel.' },
   library: { title: 'Knowledge library', copy: 'Browse the structured music knowledge stored in your JazzClass Supabase database.' },
+  'my-stuff': { title: 'My Stuff', copy: 'Your saved progressions, folders and learning progress.' },
 };
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('notes');
+  const [personalData,setPersonalData] = useState<PersonalStudyData>(()=>loadPersonalStudyData());
   const [selection, setSelection] = useState<Lesson | null>(null);
   const [query, setQuery] = useState('');
   const [tempo, setTempo] = useState(72);
@@ -73,6 +78,8 @@ export default function App() {
   const [playedNotes, setPlayedNotes] = useState<number[]>([]);
   const { playing, stepIndex, stepNotes, stepLabel, play, stop } = usePlayback();
 
+  useEffect(() => { savePersonalStudyData(personalData); },[personalData]);
+
   useEffect(() => {
     let alive = true;
     void loadProgressionCatalogue().then(result => {
@@ -90,7 +97,7 @@ export default function App() {
 
   const data = useMemo(() => {
     let items: Lesson[] = [];
-    if (tab === 'theory') items = [];
+    if (tab === 'theory' || tab === 'my-stuff') items = [];
     if (tab === 'notes') items = noteLessons;
     if (tab === 'scales') items = scalePlayMode === 'single' ? scales : scales.map(s => {
       const pcs = (s.notes as string[]).map(n => ({C:0,'C♯':1,D:2,'D♯':3,E:4,F:5,'F♯':6,G:7,'G♯':8,A:9,'A♯':10,B:11} as Record<string,number>)[n] ?? 0);
@@ -162,13 +169,14 @@ export default function App() {
         })
       : (tab === 'runs' ? item.lh : item.rh).map(n => ({ notes: [midi(n)], lh: [], rh: [midi(n)], beats: 0.5, label: n }));
     const playable = { id: item.id, title: item.title, sub: item.sub ?? '', bpm: tempo, loop, steps: sourceSteps };
+    if(isProgression) setPersonalData(old=>recordPractice(old,item.id,false));
     await unlockAudio();
     play(playable, (notes, lh, rh) => {
       setLiveNotes(notes);
       setLeftLiveNotes(lh);
       setRightLiveNotes(rh);
       setPlayedNotes(old => [...notes, ...old].slice(0, 28));
-    }, () => { setLiveNotes([]); setLeftLiveNotes([]); setRightLiveNotes([]); }, velocity / 100 * volume / 100);
+    }, () => { setLiveNotes([]); setLeftLiveNotes([]); setRightLiveNotes([]); if(isProgression) setPersonalData(old=>recordPractice(old,item.id,true)); }, velocity / 100 * volume / 100);
   };
 
   const handleTheoryPlay = async (notes:number[], left:number[], right:number[], title:string, sequence?:{notes:number[];left:number[];right:number[];label:string;beats?:number}[]) => {
@@ -208,6 +216,8 @@ export default function App() {
   const activeRight = rightLiveNotes;
   const current = (selection ? data.find(item => item.id === selection.id) : undefined) ?? data[0] ?? null;
   const header = descriptions[tab];
+  const toggleFavorite=(id:string)=>setPersonalData(old=>{const favorites={...old.favorites};if(Object.prototype.hasOwnProperty.call(favorites,id))delete favorites[id];else favorites[id]='folder-default';return {...old,favorites};});
+  const openProgression=(id:string)=>{const record=dbProgressions.find(item=>item.slug===id);if(!record)return;setTab('progressions');setGenre(record.style);const steps=realizeProgression(record.steps,{key:progressionKey,style:record.style,leftShape:progressionLeftShape,hands:progressionHands,inversion:progressionInversion,inversionMode:progressionInversionMode,leftOctave:progressionLeftOctave,rightOctave:progressionRightOctave,slashEnabled});const first=steps[0];setSelection({id:record.slug,title:record.title,category:record.style,sub:record.roman_numerals.join(' · '),description:record.description,feel:record.description,lh:first?.lh??[],rh:first?.rh??[],steps,tip:'Key: '+progressionKey+'. Difficulty '+record.difficulty+'/5 · suggested tempo '+record.tempo_min+'–'+record.tempo_max+' BPM.',bpm:record.tempo_min});};
 
   return <div className="studio-shell">
     <header className="studio-header">
@@ -226,7 +236,7 @@ export default function App() {
       stopPlayback(); setTab(id as Tab); setSelection(null); setQuery('');
     }} />
 
-    <main className="studio-main">
+    {tab==='my-stuff' ? <MyStuff items={dbProgressions.map(item=>({id:item.slug,title:item.title,category:item.style}))} value={personalData} onChange={setPersonalData} onOpen={openProgression}/> : <main className="studio-main">
       <section className="catalog">
         <div className="catalog-heading">
           <SectionIntro title={header.title} copy={header.copy} meta={data.length + ' LESSONS'} />
@@ -237,7 +247,7 @@ export default function App() {
         {tab === 'progressions' && <div className="catalog-status">{progressionsLoading ? 'Loading 100 professional progressions from JazzClass database…' : progressionsError ? 'Database: '+progressionsError : dbProgressions.length+' progressions loaded · '+progressionKey+' major reference key'}</div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
         {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
-          <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} />)}</div>}
+          <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} favorite={Boolean(personalData.favorites[item.id]!==undefined)} onToggleFavorite={tab==='progressions'?()=>toggleFavorite(item.id):undefined} />)}</div>}
         {!data.length && tab !== 'tips' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
       </section>
 
@@ -252,9 +262,9 @@ export default function App() {
           <div className="detail-actions"><button className="play-primary" onClick={() => void handlePlay(current)}>{playing && selection?.id === current.id ? 'Ⅱ PAUSE / STOP' : '▶ PLAY LESSON'}</button><button className="stop-button" onClick={stopPlayback}>■ Stop</button></div>
         </> : <div className="empty-state">Choose a lesson to see its notes, hand position and practice advice.</div>}
       </aside>
-    </main>
+    </main>}
 
-    <section className="practice-panel">
+    {tab!=='my-stuff' && <section className="practice-panel">
       <div className="practice-heading"><div><div className="detail-kicker">LIVE PIANO · EVERY NOTE IS VISIBLE</div><h2>Practice keyboard</h2><p>White and black keys only. Green = left hand · yellow = right hand · amber = free play.</p></div><span className="audio-badge"><i /> BROWSER AUDIO ENGINE</span></div>
       <div className="now-playing"><b>NOW PLAYING</b><div>{playedNotes.length ? playedNotes.map((n, i) => <span key={i} className={active.includes(n) ? 'note-chip active-chip' : 'note-chip'}>{note(n)}</span>) : <small>Notes and chord tones will appear here as they sound.</small>}</div></div>
       <div className="practice-controls">
@@ -266,9 +276,9 @@ export default function App() {
         <button className="stop-button" onClick={stopPlayback}>■ Stop playback</button>
       </div>
       <p className="audio-footnote">Progressions support configurable two- or three-note left-hand patterns, right-hand inversions and optional slash-bass movement. Green marks left-hand notes and yellow marks right-hand chord tones. Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
-    </section>
+    </section>}
 
     <footer className="studio-footer"><b>JAZZCLASS · MUSIC KNOWLEDGE STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
-    <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} onKey={handleKey} onStop={stopPlayback} />
+    {tab!=='my-stuff' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} onKey={handleKey} onStop={stopPlayback} />}
   </div>;
 }

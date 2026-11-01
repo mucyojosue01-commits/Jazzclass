@@ -70,8 +70,8 @@ function genreVoicing(style:string,quality:string,tones:number[]){
   if(seventh!==undefined)return [third,fifth,seventh,ninth];
   return [0,third,fifth,14];
  }
- if(s==='worship')return hasSeventh?[0,third,seventh,14]:[0,7,14,third+12];
- if(s==='praise'||s==='gospel')return hasSeventh?[third,fifth,seventh,14]:[0,third,7,14];
+ if(s==='worship')return hasSeventh?[0,third,seventh??10,14]:[0,7,14,third+12];
+ if(s==='praise'||s==='gospel')return hasSeventh?[third,fifth,seventh??10,14]:[0,third,7,14];
  if(s==='pop')return [0,7,14,third+12];
  return tones.length>4?tones.filter(n=>n!==7).slice(0,4):tones;
 }

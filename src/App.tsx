@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { midi, note, scales, chordScales, chords, progressions, slashChords, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
+import { midi, note, scales, chordScales, chords, progressions, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
 import { playNote, unlockAudio, playMetronomeTick, closeAudio } from './lib/pianoAudio';
 import PianoDock from './components/PianoDock';
 import TabBar from './components/TabBar';
@@ -51,7 +51,6 @@ export default function App() {
   const [loop, setLoop] = useState(false);
   const [metronome, setMetronome] = useState(false);
   const [showFamilies, setShowFamilies] = useState(true);
-  const [scaleMode, setScaleMode] = useState<'notes'|'harmonized'>('notes');
   const [scaleQuality, setScaleQuality] = useState<'major'|'minor'|'diminished'|'augmented'|'sus2'|'sus4'>('major');
   const [scalePlayMode, setScalePlayMode] = useState<'single'|'harmony'>('single');
   const [progressionLeftShape, setProgressionLeftShape] = useState<'two'|'three'>('two');
@@ -76,7 +75,7 @@ export default function App() {
       return {...s,id:s.id+'-harm-'+scaleQuality,title:s.title+' · '+scaleQuality.toUpperCase()+' harmony',category:'Scale harmony · '+scaleQuality,description:'Each scale degree is voiced as a '+scaleQuality+' chord. All right-hand chord tones sound simultaneously.',lh:[],rh:steps[0].rh,steps,notes:steps.map(x=>x.name)};
     });
     if (tab === 'chords') items = [...chords, ...harmonies, ...(showFamilies ? chordScales : [])];
-    if (tab === 'progressions') items = progressions.filter(x => genre === 'All' || x.category === genre).map(item => ({...item, steps:item.steps?.map((step,index)=>{ const sourceLH=step.lh.map(midi); const root=sourceLH[0] ?? 42; let lh=progressionLeftShape==='three' ? [root,root+7,root+12] : [root,root+7]; let rh=step.rh.map(midi).sort((a,b)=>a-b); const turns=progressionInversion % Math.max(1,rh.length); for(let i=0;i<turns;i++){const n=rh.shift()!;rh.push(n+12);} if(slashEnabled){const bass=root+4;lh=progressionLeftShape==='three'?[bass,bass+7,bass+12]:[bass,bass+7];} if(progressionInversionMode==='both' && progressionInversion>0){const turnsLH=progressionInversion%lh.length;for(let i=0;i<turnsLH;i++){const n=lh.shift()!;lh.push(n+12);}} return {...step,lh:lh.map(note),rh:rh.map(note)};})}));
+    if (tab === 'progressions') items = progressions.filter(x => genre === 'All' || x.category === genre).map(item => ({...item, steps:item.steps?.map((step)=>{ const sourceLH=step.lh.map(midi); const root=sourceLH[0] ?? 42; let lh=progressionLeftShape==='three' ? [root,root+7,root+12] : [root,root+7]; let rh=step.rh.map(midi).sort((a,b)=>a-b); const turns=progressionInversion % Math.max(1,rh.length); for(let i=0;i<turns;i++){const n=rh.shift()!;rh.push(n+12);} if(slashEnabled){const bass=root+4;lh=progressionLeftShape==='three'?[bass,bass+7,bass+12]:[bass,bass+7];step={...step,name:step.name+'/'+note(bass)};} if(progressionInversionMode==='both' && progressionInversion>0){const turnsLH=progressionInversion%lh.length;for(let i=0;i<turnsLH;i++){const n=lh.shift()!;lh.push(n+12);}} return {...step,lh:lh.map(note),rh:rh.map(note)};})}));
     if (tab === 'arpeggios') items = arpeggios;
     if (tab === 'runs') items = runs;
     const q = query.trim().toLowerCase();

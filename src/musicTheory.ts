@@ -46,6 +46,19 @@ export const CHORD_TYPES:ChordDefinition[] = [
  {id:'add9',name:'Add ninth',symbol:'add9',family:'Added tones',intervals:[0,4,7,14]},
  {id:'quartal',name:'Quartal stack',symbol:'quartal',family:'Modern',intervals:[0,5,10,15]}
 ];
+export const HARMONY_TYPES = [{id:'thirds',name:'Diatonic thirds',step:2},{id:'fourths',name:'Diatonic fourths',step:3},{id:'fifths',name:'Diatonic fifths',step:4},{id:'sixths',name:'Diatonic sixths',step:5}] as const;
+export const LICK_TEMPLATES = [
+ {id:'upper-turn',name:'Upper neighbour turn',style:'Jazz',intervals:[0,2,1,0],description:'A short turn around the root.'},
+ {id:'dominant-enclosure',name:'Dominant enclosure',style:'Jazz',intervals:[7,10,11,9],description:'Enclose a guide tone and resolve.'},
+ {id:'gospel-pickup',name:'Gospel pickup',style:'Gospel',intervals:[4,5,9],description:'A compact pickup into the tonic.'},
+ {id:'minor-outline',name:'Minor seventh outline',style:'Jazz / R&B',intervals:[0,3,7,10],description:'Outline a minor seventh chord.'},
+ {id:'major-six-nine',name:'Major 6/9 fragment',style:'Jazz / Worship',intervals:[0,4,7,9,14],description:'A warm major-colour fragment.'},
+ {id:'chromatic-approach',name:'Chromatic lower approach',style:'Jazz',intervals:[2,1,0],description:'Resolve a semitone into a chord tone.'},
+ {id:'dominant-nine',name:'Dominant ninth fragment',style:'Jazz / Blues',intervals:[4,7,10,14],description:'Outline dominant extensions.'},
+ {id:'descending-tones',name:'Descending chord tones',style:'Gospel / Jazz',intervals:[11,7,4,0],description:'Descend through chord tones.'},
+ {id:'double-note',name:'Double-note answer',style:'Worship / Pop',intervals:[0,4,7,4],description:'A compact melodic answer.'},
+ {id:'turnaround-tag',name:'Jazz turnaround tag',style:'Jazz',intervals:[7,9,10,11,12],description:'A short dominant tag resolving home.'}
+] as const;
 export const PROGRESSION_TEMPLATES = [
  {id:'jazz251',name:'Jazz ii–V–I',style:'Jazz',degrees:['ii7','V7','Imaj7'],description:'Foundational major-key jazz cadence.'},
  {id:'jazz36251',name:'Jazz iii–VI–ii–V–I',style:'Jazz',degrees:['iii7','VI7','ii7','V7','Imaj7'],description:'Extended cycle resolving to tonic.'},
@@ -63,5 +76,20 @@ export function makeVoicing(root:number,chord:ChordDefinition,inversion=0,octave
 export function transposeNotes(notes:number[],semitones:number):number[]{return notes.map(n=>n+semitones);}
 export function makeArpeggio(root:number,chord:ChordDefinition,octave=3,direction:'up'|'down'|'up_down'='up_down'):number[]{const up=makeChord(root,chord,octave);if(direction==='up')return [...up,up[0]+12];if(direction==='down')return [...up].reverse();return [...up,up[0]+12,...up.slice(1).reverse()];}
 function qualityFromDegree(degree:string):string{const roman=degree.replace(/maj|dim|ø|[0-9♭#°]/g,'');if(degree.includes('ø')||degree.includes('m7♭5'))return'half_diminished7';if(degree.includes('dim'))return'diminished7';const minor=roman===roman.toLowerCase();if(minor)return degree.includes('7')?'minor7':'minor';if(roman==='I'||roman==='IV')return degree.includes('maj7')?'major7':'major';if(roman==='V'||roman==='VI')return degree.includes('7')?'dominant7':'major';return degree.includes('m')?'minor7':'dominant7';}
-export function realizeProgression(root:number,template:typeof PROGRESSION_TEMPLATES[number],octave=2){const major=[0,2,4,5,7,9,11];return template.degrees.map((degree,index)=>{const roman=degree.replace(/[0-9]/g,'').replace('maj','').replace('♭','').replace('#','');const numeral=roman.toLowerCase();const degreeIndex=({i:0,ii:1,iii:2,iv:3,v:4,vi:5,vii:6}[numeral]??0);const chordType=CHORD_TYPES.find(c=>c.id===qualityFromDegree(degree))??CHORD_TYPES[0];const chordRoot=(root+major[degreeIndex])%12;const notes=makeChord(chordRoot,chordType,3);const bass=(octave+1)*12+chordRoot;return{name: pitchName(chordRoot)+chordType.symbol,left:[bass,bass+7],right:notes.map(n=>n+12),degree,step:index+1};});}
+export function realizeProgression(root:number,template:typeof PROGRESSION_TEMPLATES[number],octave=2,inversion=0){const major=[0,2,4,5,7,9,11];return template.degrees.map((degree,index)=>{const roman=degree.replace(/[0-9]/g,'').replace('maj','').replace('♭','').replace('#','');const numeral=roman.toLowerCase();const degreeIndex=({i:0,ii:1,iii:2,iv:3,v:4,vi:5,vii:6}[numeral]??0);const chordType=CHORD_TYPES.find(c=>c.id===qualityFromDegree(degree))??CHORD_TYPES[0];const chordRoot=(root+major[degreeIndex])%12;const notes=invertChord(makeChord(chordRoot,chordType,3),inversion);const bass=(octave+1)*12+chordRoot;return{name: pitchName(chordRoot)+chordType.symbol,left:[bass,bass+7],right:notes.map(n=>n+12),degree,step:index+1};});}
 export function makeSlashChord(root:number,chord:ChordDefinition,bassInterval:number,octave=2){const bassPc=(root+bassInterval)%12;const bass=(octave+1)*12+bassPc;const upper=makeChord(root,chord,3);return{symbol:pitchName(root)+chord.symbol+'/'+pitchName(bassPc),bass:[bass],upper};}
+
+export function makeScaleHarmony(root:number,scale:ScaleDefinition,diatonicStep:number,octave=4){
+ const base=(octave+1)*12+root;
+ return scale.intervals.map((interval,index)=>{
+  const secondIndex=(index+diatonicStep)%scale.intervals.length;
+  const first=base+interval;
+  let second=base+scale.intervals[secondIndex];
+  if(secondIndex<=index)second+=12;
+  return {label:(index+1)+' → '+(secondIndex+1),notes:[first,second],left:[],right:[first,second]};
+ });
+}
+export function makeLick(root:number,intervals:readonly number[],octave=4):number[]{
+ const base=(octave+1)*12+root;
+ return intervals.map(semitones=>base+semitones);
+}

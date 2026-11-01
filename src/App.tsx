@@ -7,6 +7,7 @@ import PlayCard from './components/PlayCard';
 import SectionIntro from './components/SectionIntro';
 import usePlayback from './hooks/usePlayback';
 import TheoryLab from './components/TheoryLab';
+import KnowledgeLibrary from './components/KnowledgeLibrary';
 
 const TABS = [
   { id: 'theory', label: 'Theory Lab' },
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'arpeggios', label: 'Arpeggios' },
   { id: 'runs', label: 'Runs' },
   { id: 'tips', label: 'Tips' },
+  { id: 'library', label: 'Knowledge Library' },
 ] as const;
 type Tab = typeof TABS[number]['id'];
 
@@ -36,6 +38,7 @@ const descriptions: Record<Tab, { title: string; copy: string }> = {
   arpeggios: { title: 'Arpeggios', copy: 'Hear chord tones one at a time, moving smoothly up and back down.' },
   runs: { title: 'Runs & licks', copy: 'Short musical connectors, chord-tone phrases and tasteful fills. Left-hand examples only.' },
   tips: { title: 'Practice notes', copy: 'Practical advice for touch, timing, harmony and developing a musical feel.' },
+  library: { title: 'Knowledge library', copy: 'Browse the structured music knowledge stored in your JazzClass Supabase database.' },
 };
 
 export default function App() {
@@ -164,14 +167,14 @@ export default function App() {
 
   return <div className="studio-shell">
     <header className="studio-header">
-      <div className="brand-lockup"><span className="brand-mark">F♯</span><span><b>JAZZCLASS</b><small>PIANO STUDIO · ONE KEY ONLY</small></span></div>
-      <span className="header-pill"><i /> F♯ CENTRED</span>
+      <div className="brand-lockup"><span className="brand-mark">F♯</span><span><b>JAZZCLASS</b><small>PIANO STUDIO · ALL 12 KEYS</small></span></div>
+      <span className="header-pill"><i /> ALL-KEY THEORY</span>
     </header>
 
     <section className="hero">
       <div className="hero-kicker"><i /> PIANO STUDIO · ONE KEY ONLY</div>
-      <h1>Learn piano<br /><em>in F♯</em></h1>
-      <p>Notes, every scale, chords and harmony, pop, worship, praise, gospel and jazz progressions, arpeggios and short musical runs — all in F♯, all on the keyboard below.</p>
+      <h1>Understand music.<br /><em>Play every key.</em></h1>
+      <p>Explore all 12 keys, scales, chords, inversions, voicings, harmony, progressions, arpeggios and professional musical vocabulary.</p>
       <div className="hero-foot"><span>LISTEN · SEE · PLAY</span><span>DEFAULT TEMPO · 72 BPM</span></div>
     </section>
 
@@ -188,7 +191,7 @@ export default function App() {
         {tab === 'scales' && <div className="family-switch"><button className={scaleMode==='notes'?'selected':''} onClick={()=>setScaleMode('notes')}>Single notes</button><button className={scaleMode==='harmonized'?'selected':''} onClick={()=>setScaleMode('harmonized')}>Harmonised chords</button>{scaleMode==='harmonized' && <select value={scaleQuality} onChange={e=>setScaleQuality(e.target.value as typeof scaleQuality)}><option value="major">Major</option><option value="minor">Minor</option><option value="sus2">Sus2</option><option value="sus4">Sus4</option></select>}</div>}
         {tab === 'progressions' && <div className="family-switch"><button className={progressionMode==='standard'?'selected':''} onClick={()=>{setProgressionMode('standard');setGenre('All')}}>Chord progressions</button><button className={progressionMode==='slash'?'selected':''} onClick={()=>{setProgressionMode('slash');setGenre('All')}}>Slash chords</button><select value={genre} onChange={e=>setGenre(e.target.value)}>{['All','Jazz','Worship','Praise','Gospel'].map(g=><option key={g}>{g}</option>)}</select></div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
-        {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
+        {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
           <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} />)}</div>}
         {!data.length && tab !== 'tips' && <div className="empty-state">No lessons match that search.</div>}
       </section>

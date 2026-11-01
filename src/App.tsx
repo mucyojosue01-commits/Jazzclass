@@ -274,7 +274,7 @@ export default function App() {
   const activeRight = rightLiveNotes;
   const current = (selection ? data.find(item => item.id === selection.id) : undefined) ?? data[0] ?? null;
   const header = descriptions[tab];
-  const toggleFavorite=(id:string)=>setPersonalData(old=>{const favorites={...old.favorites};if(Object.prototype.hasOwnProperty.call(favorites,id))delete favorites[id];else favorites[id]='folder-default';return {...old,favorites};});
+  const toggleFavorite=(id:string)=>setPersonalData(old=>{const favorites={...old.favorites};if(Object.prototype.hasOwnProperty.call(favorites,id))delete favorites[id];else favorites[id]=['folder-default'];return {...old,favorites};});
   const openProgression=(id:string)=>{const record=dbProgressions.find(item=>item.slug===id);if(!record)return;setTab('progressions');setGenre(record.style);const steps=realizeProgression(record.steps,{key:progressionKey,style:record.style,leftShape:progressionLeftShape,hands:progressionHands,inversion:progressionInversion,inversionMode:progressionInversionMode,leftOctave:progressionLeftOctave,rightOctave:progressionRightOctave,slashEnabled});const first=steps[0];setSelection({id:record.slug,title:record.title,category:record.style,sub:record.roman_numerals.join(' · '),description:record.description,feel:record.description,lh:first?.lh??[],rh:first?.rh??[],steps,tip:'Key: '+progressionKey+'. Difficulty '+record.difficulty+'/5 · suggested tempo '+record.tempo_min+'–'+record.tempo_max+' BPM.',bpm:record.tempo_min});};
 
   return <div className="studio-shell">

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playNote } from '../lib/pianoAudio';
 
-type Step = { notes: number[]; beats: number; label?: string };
+type Step = { notes: number[]; lh?: number[]; rh?: number[]; beats: number; label?: string };
 type Item = { id: string; title: string; sub?: string; bpm: number; loop: boolean; steps: Step[] };
 export default function usePlayback() {
   const [playing, setPlaying] = useState(false);
@@ -21,7 +21,7 @@ export default function usePlayback() {
     setPlaying(false); setStepIndex(-1); setStepNotes([]); setStepLabel('');
   }, []);
 
-  const play = useCallback((item: Item, onStep: (notes: number[]) => void, onFinish: () => void, velocity = .5) => {
+  const play = useCallback((item: Item, onStep: (notes: number[], lh: number[], rh: number[]) => void, onFinish: () => void, velocity = .5) => {
     stop();
     setPlaying(true);
     const run = () => {
@@ -37,7 +37,7 @@ export default function usePlayback() {
         timers.current.push(window.setTimeout(() => {
           if (token !== generation.current) return;
           setStepIndex(index); setStepNotes(step.notes); setStepLabel(step.label || '');
-          onStep(step.notes);
+          onStep(step.notes, step.lh ?? [], step.rh ?? step.notes);
         }, at * 1000));
         offset += step.beats * beat;
       });

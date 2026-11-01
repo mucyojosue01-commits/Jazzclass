@@ -8,7 +8,7 @@ const date=(v:string|null)=>v?new Date(v).toLocaleDateString(undefined,{month:'s
 export default function MyStuff({items,value,onChange,onOpen,syncStatus,userEmail,onAuthChange}:Props){
  const [folderName,setFolderName]=useState('');const [activeFolder,setActiveFolder]=useState('all');const [notice,setNotice]=useState('');const [email,setEmail]=useState('');const [authBusy,setAuthBusy]=useState(false);const [confidence,setConfidence]=useState<Record<string,number>>({});
  const itemMap=useMemo(()=>new Map(items.map(x=>[x.id,x])),[items]);
- const favorites=items.filter(x=>Object.hasOwn(value.favorites,x.id));
+ const favorites=items.filter(x=>Object.prototype.hasOwnProperty.call(value.favorites,x.id));
  const inFolder=(id:string,folder:string)=>folder==='all'||(value.favorites[id]??[]).includes(folder);
  const visible=favorites.filter(x=>inFolder(x.id,activeFolder));
  const records=Object.entries(value.progress).map(([id,record])=>({id,record,item:itemMap.get(id)})).filter(x=>x.item).sort((a,b)=>(b.record.lastPracticed??'').localeCompare(a.record.lastPracticed??''));

@@ -103,7 +103,7 @@ export default function App() {
       const records = dbProgressions.filter(item => genre === 'All' || item.style === genre);
       items = records.map(item => {
         const steps = realizeProgression(item.steps, {
-          key:progressionKey,leftShape:progressionLeftShape,hands:progressionHands,
+          key:progressionKey,style:item.style,leftShape:progressionLeftShape,hands:progressionHands,
           inversion:progressionInversion,inversionMode:progressionInversionMode,
           leftOctave:progressionLeftOctave,rightOctave:progressionRightOctave,slashEnabled
         });

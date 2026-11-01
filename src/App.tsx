@@ -49,7 +49,9 @@ export default function App() {
   const [scaleQuality, setScaleQuality] = useState<'major'|'minor'|'sus2'|'sus4'>('major');
   const [progressionMode, setProgressionMode] = useState<'standard'|'slash'>('standard');
   const [genre, setGenre] = useState('All');
-  const [liveNotes, setLiveNotes] = useState<number[]>([]);\n  const [leftLiveNotes, setLeftLiveNotes] = useState<number[]>([]);\n  const [rightLiveNotes, setRightLiveNotes] = useState<number[]>([]);
+  const [liveNotes, setLiveNotes] = useState<number[]>([]);
+  const [leftLiveNotes, setLeftLiveNotes] = useState<number[]>([]);
+  const [rightLiveNotes, setRightLiveNotes] = useState<number[]>([]);
   const [playedNotes, setPlayedNotes] = useState<number[]>([]);
   const { playing, stepIndex, stepNotes, stepLabel, play, stop } = usePlayback();
 
@@ -124,7 +126,9 @@ export default function App() {
     window.setTimeout(() => setLiveNotes(old => old.filter(n => n !== m)), 900);
   };
 
-  const active = playing && stepNotes.length ? stepNotes : liveNotes;\n  const activeLeft = leftLiveNotes;\n  const activeRight = rightLiveNotes;
+  const active = playing && stepNotes.length ? stepNotes : liveNotes;
+  const activeLeft = leftLiveNotes;
+  const activeRight = rightLiveNotes;
   const current = selection ?? data[0] ?? null;
   const header = descriptions[tab];
 

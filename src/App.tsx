@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadProgressionCatalogue, type ProgressionRecord } from './lib/musicRepository';
-import { midi, note, scales, chordScales, chords, progressions, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
+import { midi, note, scales, chordScales, chords, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
 import { playNote, unlockAudio, playMetronomeTick, closeAudio } from './lib/pianoAudio';
 import PianoDock from './components/PianoDock';
 import TabBar from './components/TabBar';
@@ -113,9 +113,20 @@ export default function App() {
           const chordPc = (pitchClass + degreeOffsets[degree] + chromatic + 12) % 12;
           const bassRoot = 36 + chordPc;
           const trebleRoot = 60 + chordPc;
-          const lh = (step.left_hand_formula ?? [0,7,14]).map(interval => bassRoot + interval);
-          const rh = (step.right_hand_formula ?? [0,4,7]).map(interval => trebleRoot + interval);
-          return {name:step.roman_numeral+' · '+step.chord_quality,lh:lh.map(note),rh:rh.map(note),beats:Number(step.beats)||2};
+          const sourceLH = (step.left_hand_formula ?? [0,7,14]).map(interval => bassRoot + interval);
+          const root = sourceLH[0] ?? bassRoot;
+          let lh = progressionLeftShape === 'three' ? [root,root+7,root+12] : [root,root+7];
+          let rh = (step.right_hand_formula ?? [0,4,7]).map(interval => trebleRoot + interval).sort((a,b)=>a-b);
+          const turns = progressionInversion % Math.max(1,rh.length);
+          for(let i=0;i<turns;i++){const n=rh.shift()!;rh.push(n+12);}
+          let name = step.roman_numeral+' · '+step.chord_quality;
+          if(slashEnabled){const bass=root+4;lh=progressionLeftShape==='three'?[bass,bass+7,bass+12]:[bass,bass+7];name += ' / '+note(bass);}
+          if(progressionInversionMode==='both' && progressionInversion>0){const turnsLH=progressionInversion%lh.length;for(let i=0;i<turnsLH;i++){const n=lh.shift()!;lh.push(n+12);}}
+          if(progressionLeftOctave)lh=[lh[0]-12,...lh];
+          if(progressionRightOctave && rh.length)rh=[...rh,rh[0]+12];
+          if(progressionHands==='right')lh=[];
+          if(progressionHands==='left')rh=[];
+          return {name,lh:lh.map(note),rh:rh.map(note),beats:Number(step.beats)||2};
         });
         const first = steps[0];
         return {

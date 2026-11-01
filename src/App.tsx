@@ -49,7 +49,7 @@ export default function App() {
   const [scaleQuality, setScaleQuality] = useState<'major'|'minor'|'sus2'|'sus4'>('major');
   const [progressionMode, setProgressionMode] = useState<'standard'|'slash'>('standard');
   const [genre, setGenre] = useState('All');
-  const [liveNotes, setLiveNotes] = useState<number[]>([]);
+  const [liveNotes, setLiveNotes] = useState<number[]>([]);\n  const [leftLiveNotes, setLeftLiveNotes] = useState<number[]>([]);\n  const [rightLiveNotes, setRightLiveNotes] = useState<number[]>([]);
   const [playedNotes, setPlayedNotes] = useState<number[]>([]);
   const { playing, stepIndex, stepNotes, stepLabel, play, stop } = usePlayback();
 
@@ -124,7 +124,7 @@ export default function App() {
     window.setTimeout(() => setLiveNotes(old => old.filter(n => n !== m)), 900);
   };
 
-  const active = playing && stepNotes.length ? stepNotes : liveNotes;
+  const active = playing && stepNotes.length ? stepNotes : liveNotes;\n  const activeLeft = leftLiveNotes;\n  const activeRight = rightLiveNotes;
   const current = selection ?? data[0] ?? null;
   const header = descriptions[tab];
 
@@ -187,6 +187,6 @@ export default function App() {
     </section>
 
     <footer className="studio-footer"><b>JAZZCLASS · F♯ PIANO STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
-    <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} playing={playing} onKey={handleKey} onStop={stopPlayback} />
+    <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} onKey={handleKey} onStop={stopPlayback} />
   </div>;
 }

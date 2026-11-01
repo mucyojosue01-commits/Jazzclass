@@ -52,8 +52,12 @@ export default function App() {
   const [metronome, setMetronome] = useState(false);
   const [showFamilies, setShowFamilies] = useState(true);
   const [scaleMode, setScaleMode] = useState<'notes'|'harmonized'>('notes');
-  const [scaleQuality, setScaleQuality] = useState<'major'|'minor'|'sus2'|'sus4'>('major');
-  const [progressionMode, setProgressionMode] = useState<'standard'|'slash'>('standard');
+  const [scaleQuality, setScaleQuality] = useState<'major'|'minor'|'diminished'|'augmented'|'sus2'|'sus4'>('major');
+  const [scalePlayMode, setScalePlayMode] = useState<'single'|'harmony'>('single');
+  const [progressionLeftShape, setProgressionLeftShape] = useState<'two'|'three'>('two');
+  const [progressionInversion, setProgressionInversion] = useState(0);
+  const [progressionInversionMode, setProgressionInversionMode] = useState<'right'|'both'>('right');
+  const [slashEnabled, setSlashEnabled] = useState(false);
   const [genre, setGenre] = useState('All');
   const [liveNotes, setLiveNotes] = useState<number[]>([]);
   const [leftLiveNotes, setLeftLiveNotes] = useState<number[]>([]);
@@ -65,19 +69,19 @@ export default function App() {
     let items: Lesson[] = [];
     if (tab === 'theory') items = [];
     if (tab === 'notes') items = noteLessons;
-    if (tab === 'scales') items = scaleMode === 'notes' ? scales : scales.filter(s => s.id === 'scale-0' || s.id === 'scale-1').map(s => {
+    if (tab === 'scales') items = scalePlayMode === 'single' ? scales : scales.map(s => {
       const pcs = (s.notes as string[]).map(n => ({C:0,'C♯':1,D:2,'D♯':3,E:4,F:5,'F♯':6,G:7,'G♯':8,A:9,'A♯':10,B:11} as Record<string,number>)[n] ?? 0);
-      const intervals = scaleQuality === 'major' ? [0,4,7] : scaleQuality === 'minor' ? [0,3,7] : scaleQuality === 'sus2' ? [0,2,7] : [0,5,7];
+      const intervals = scaleQuality === 'major' ? [0,4,7] : scaleQuality === 'minor' ? [0,3,7] : scaleQuality === 'diminished' ? [0,3,6] : scaleQuality === 'augmented' ? [0,4,8] : scaleQuality === 'sus2' ? [0,2,7] : [0,5,7];
       const steps = pcs.map((p,i) => { let root=54+((p-6+12)%12); if(i>0 && root < 54) root += 12; const chord=intervals.map(v => note(root+v)); return {name: s.title.replace(' harmonised','')+' · degree '+(i+1),lh:[],rh:chord,beats:1.5}; });
-      return {...s,id:s.id+'-harm-'+scaleQuality,title:s.title+' · '+scaleQuality.toUpperCase()+' chords',category:'Harmonised scale · '+scaleQuality,description:'Each scale degree is voiced as a '+scaleQuality+' chord. All right-hand chord tones sound simultaneously.',lh:[],rh:steps[0].rh,steps,notes:steps.map(x=>x.name)};
+      return {...s,id:s.id+'-harm-'+scaleQuality,title:s.title+' · '+scaleQuality.toUpperCase()+' harmony',category:'Scale harmony · '+scaleQuality,description:'Each scale degree is voiced as a '+scaleQuality+' chord. All right-hand chord tones sound simultaneously.',lh:[],rh:steps[0].rh,steps,notes:steps.map(x=>x.name)};
     });
     if (tab === 'chords') items = [...chords, ...harmonies, ...(showFamilies ? chordScales : [])];
-    if (tab === 'progressions') items = (progressionMode === 'slash' ? slashChords : progressions).filter(x => genre === 'All' || x.category === genre);
+    if (tab === 'progressions') items = progressions.filter(x => genre === 'All' || x.category === genre).map(item => ({...item, steps:item.steps?.map((step,index)=>{ const sourceLH=step.lh.map(midi); const root=sourceLH[0] ?? 42; let lh=progressionLeftShape==='three' ? [root,root+7,root+12] : [root,root+7]; let rh=step.rh.map(midi).sort((a,b)=>a-b); const turns=progressionInversion % Math.max(1,rh.length); for(let i=0;i<turns;i++){const n=rh.shift()!;rh.push(n+12);} if(slashEnabled){const bass=root+4;lh=progressionLeftShape==='three'?[bass,bass+7,bass+12]:[bass,bass+7];} if(progressionInversionMode==='both' && progressionInversion>0){const turnsLH=progressionInversion%lh.length;for(let i=0;i<turnsLH;i++){const n=lh.shift()!;lh.push(n+12);}} return {...step,lh:lh.map(note),rh:rh.map(note)};})}));
     if (tab === 'arpeggios') items = arpeggios;
     if (tab === 'runs') items = runs;
     const q = query.trim().toLowerCase();
     return q ? items.filter(x => [x.title, x.sub, x.category, x.feel, x.tip].join(' ').toLowerCase().includes(q)) : items;
-  }, [tab, query, showFamilies, scaleMode, scaleQuality, progressionMode, genre]);
+  }, [tab, query, showFamilies, scalePlayMode, scaleQuality, progressionLeftShape, progressionInversion, progressionInversionMode, slashEnabled, genre]);
 
   useEffect(() => {
     if (!metronome) return;
@@ -188,8 +192,8 @@ export default function App() {
           <SectionIntro title={header.title} copy={header.copy} meta={data.length + ' LESSONS'} />
           {tab !== 'tips' && <input className="lesson-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a lesson…" aria-label="Find a lesson" />}
         </div>
-        {tab === 'scales' && <div className="family-switch"><button className={scaleMode==='notes'?'selected':''} onClick={()=>setScaleMode('notes')}>Single notes</button><button className={scaleMode==='harmonized'?'selected':''} onClick={()=>setScaleMode('harmonized')}>Harmonised chords</button>{scaleMode==='harmonized' && <select value={scaleQuality} onChange={e=>setScaleQuality(e.target.value as typeof scaleQuality)}><option value="major">Major</option><option value="minor">Minor</option><option value="sus2">Sus2</option><option value="sus4">Sus4</option></select>}</div>}
-        {tab === 'progressions' && <div className="family-switch"><button className={progressionMode==='standard'?'selected':''} onClick={()=>{setProgressionMode('standard');setGenre('All')}}>Chord progressions</button><button className={progressionMode==='slash'?'selected':''} onClick={()=>{setProgressionMode('slash');setGenre('All')}}>Slash chords</button><select value={genre} onChange={e=>setGenre(e.target.value)}>{['All','Jazz','Worship','Praise','Gospel'].map(g=><option key={g}>{g}</option>)}</select></div>}
+        {tab === 'scales' && <div className="arrangement-panel"><div className="family-switch"><button className={scalePlayMode==='single'?'selected':''} onClick={()=>setScalePlayMode('single')}>Single notes</button><button className={scalePlayMode==='harmony'?'selected':''} onClick={()=>setScalePlayMode('harmony')}>Chords / harmonies</button></div>{scalePlayMode==='harmony' && <label className="setting-field">CHORD TYPE<select value={scaleQuality} onChange={e=>setScaleQuality(e.target.value as typeof scaleQuality)}><option value="major">Major</option><option value="minor">Minor</option><option value="diminished">Diminished</option><option value="augmented">Augmented</option><option value="sus2">Suspended 2</option><option value="sus4">Suspended 4</option></select></label>}</div>}
+        {tab === 'progressions' && <div className="arrangement-panel progression-settings"><label className="setting-field">LEFT-HAND FINGERING<select value={progressionLeftShape} onChange={e=>setProgressionLeftShape(e.target.value as 'two'|'three')}><option value="two">2 notes · root + fifth</option><option value="three">3 notes · root + fifth + octave</option></select></label><label className="setting-field">RIGHT-HAND INVERSION<select value={progressionInversion} onChange={e=>setProgressionInversion(+e.target.value)}><option value={0}>Root position</option><option value={1}>1st inversion</option><option value={2}>2nd inversion</option><option value={3}>3rd inversion</option></select></label><label className="setting-field">APPLY INVERSIONS TO<select value={progressionInversionMode} onChange={e=>setProgressionInversionMode(e.target.value as 'right'|'both')}><option value="right">Right hand only</option><option value="both">Both hands</option></select></label><label className="setting-toggle"><input type="checkbox" checked={slashEnabled} onChange={e=>setSlashEnabled(e.target.checked)}/> Enable slash-chord bass movement</label><label className="setting-field">STYLE<select value={genre} onChange={e=>setGenre(e.target.value)}>{['All','Jazz','Worship','Praise','Gospel','Pop','Blues'].map(g=><option key={g}>{g}</option>)}</select></label></div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
         {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
           <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} />)}</div>}
@@ -220,7 +224,7 @@ export default function App() {
         <label className="check-control"><input type="checkbox" checked={metronome} onChange={e => setMetronome(e.target.checked)} /> Metronome</label>
         <button className="stop-button" onClick={stopPlayback}>■ Stop playback</button>
       </div>
-      <p className="audio-footnote">Progressions and slash chords play both hands together: green marks left-hand bass notes and yellow marks right-hand chord tones. Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
+      <p className="audio-footnote">Progressions support configurable two- or three-note left-hand patterns, right-hand inversions and optional slash-bass movement. Green marks left-hand notes and yellow marks right-hand chord tones. Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
     </section>
 
     <footer className="studio-footer"><b>JAZZCLASS · MUSIC KNOWLEDGE STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>

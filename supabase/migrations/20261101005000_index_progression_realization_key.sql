@@ -1,0 +1,1 @@
+create index if not exists progression_realizations_key_idx on public.progression_realizations(key_id);

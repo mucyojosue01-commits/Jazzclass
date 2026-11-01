@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { PersonalStudyData, StudyStatus } from '../lib/studyTracker';
-import { isDueForReview } from '../lib/studyTracker';
+import { isDueForReview, setStudyStatus } from '../lib/studyTracker';
 type Item={id:string;title:string;category:string};
 type Props={items:Item[];value:PersonalStudyData;onChange:(next:PersonalStudyData)=>void;onOpen:(id:string)=>void};
 const box:React.CSSProperties={border:'1px solid rgba(255,255,255,.09)',borderRadius:14,background:'#111114',padding:15};
@@ -53,7 +53,7 @@ export default function MyStuff({items,value,onChange,onOpen}:Props){
   </section>
   <section className="my-stuff-section">
    <div className="my-section-heading"><div><h3>Learning progress</h3><p>Your study history, mastery status and spaced-review schedule.</p></div></div>
-   {records.length?<div className="my-item-list">{records.sort((a,b)=>(b.record.lastPracticed??'').localeCompare(a.record.lastPracticed??'')).map(({id,item,record})=><article className="my-item progress-item" key={id}><div className="my-item-main"><span>{item!.category} · {record.sessions} practice starts · {record.completedSessions} completed</span><h4>{item!.title}</h4><p>Last practiced: {date(record.lastPracticed)}{record.nextReviewAt?' · Next review: '+date(record.nextReviewAt):''}</p><button className="my-open" onClick={()=>onOpen(id)}>Continue studying →</button></div><div className="my-item-actions"><span className={'status-pill '+record.status}>{statusLabel(record.status)}</span>{isDueForReview(record)&&<span className="due-pill">Review due</span>}</div></article>)}</div>:<div className="my-empty">Your study record will appear here when you start practicing progressions. Mark a progression as mastered when you can play it confidently without assistance.</div>}
+   {records.length?<div className="my-item-list">{records.sort((a,b)=>(b.record.lastPracticed??'').localeCompare(a.record.lastPracticed??'')).map(({id,item,record})=><article className="my-item progress-item" key={id}><div className="my-item-main"><span>{item!.category} · {record.sessions} practice starts · {record.completedSessions} completed</span><h4>{item!.title}</h4><p>Last practiced: {date(record.lastPracticed)}{record.nextReviewAt?' · Next review: '+date(record.nextReviewAt):''}</p><button className="my-open" onClick={()=>onOpen(id)}>Continue studying →</button></div><div className="my-item-actions"><select className="progress-status-select" aria-label={'Study status for '+item!.title} value={record.status} onChange={e=>onChange(setStudyStatus(value,id,e.target.value as StudyStatus,Math.max(1,record.confidence||3)))}><option value="learning">Learning</option><option value="review">Needs review</option><option value="mastered">Mastered</option></select>{isDueForReview(record)&&<span className="due-pill">Review due</span>}</div></article>)}</div>:<div className="my-empty">Your study record will appear here when you start practicing progressions. Mark a progression as mastered when you can play it confidently without assistance.</div>}
   </section>
   <p className="my-privacy">Your favorites and study history are saved privately in this browser on this device. Clearing browser data or switching devices can remove or leave this data behind; account sync can be added when you enable a sign-in method.</p>
  </div>;

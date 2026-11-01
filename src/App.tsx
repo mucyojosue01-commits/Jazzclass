@@ -11,7 +11,8 @@ import usePlayback from './hooks/usePlayback';
 import TheoryLab from './components/TheoryLab';
 import KnowledgeLibrary from './components/KnowledgeLibrary';
 import MyStuff from './components/MyStuff';
-import { loadPersonalStudyData, savePersonalStudyData, recordPractice, type PersonalStudyData } from './lib/studyTracker';
+import { loadPersonalStudyData, savePersonalStudyData, normalizeStudyData, recordPractice, type PersonalStudyData } from './lib/studyTracker';
+import { supabase } from './lib/supabaseClient';
 
 const TABS = [
   { id: 'theory', label: 'Theory Lab' },
@@ -50,6 +51,9 @@ const descriptions: Record<Tab, { title: string; copy: string }> = {
 export default function App() {
   const [tab, setTab] = useState<Tab>('notes');
   const [personalData,setPersonalData] = useState<PersonalStudyData>(()=>loadPersonalStudyData());
+  const [accountEmail,setAccountEmail] = useState<string|null>(null);
+  const [syncStatus,setSyncStatus] = useState('Saved on this device');
+  const [workspaceReady,setWorkspaceReady] = useState(false);
   const [selection, setSelection] = useState<Lesson | null>(null);
   const [query, setQuery] = useState('');
   const [tempo, setTempo] = useState(72);
@@ -78,7 +82,61 @@ export default function App() {
   const [playedNotes, setPlayedNotes] = useState<number[]>([]);
   const { playing, stepIndex, stepNotes, stepLabel, play, stop } = usePlayback();
 
+
   useEffect(() => { savePersonalStudyData(personalData); },[personalData]);
+
+  useEffect(() => {
+    if(!supabase){setWorkspaceReady(true);setSyncStatus('Local storage only · cloud unavailable');return;}
+    let alive=true;
+    const syncSession=async()=>{
+      const {data:{session}}=await supabase.auth.getSession();
+      if(!alive)return;
+      setAccountEmail(session?.user.email??null);
+      if(!session){setWorkspaceReady(true);setSyncStatus('Saved on this device · sign in for cloud sync');return;}
+      setSyncStatus('Loading your cloud workspace…');
+      const {data,error}=await supabase.from('user_study_workspace').select('workspace').eq('user_id',session.user.id).maybeSingle();
+      if(!alive)return;
+      if(error){setSyncStatus('Cloud sync error: '+error.message);setWorkspaceReady(true);return;}
+      if(data?.workspace){
+        const cloud=normalizeStudyData(data.workspace),local=loadPersonalStudyData();
+        const folders=[...cloud.folders];
+        for(const folder of local.folders)if(!folders.some(f=>f.id===folder.id))folders.push(folder);
+        const favorites={...cloud.favorites};
+        for(const [id,ids] of Object.entries(local.favorites))favorites[id]=[...new Set([...(favorites[id]??[]),...ids])];
+        const progress={...cloud.progress};
+        for(const [id,record] of Object.entries(local.progress)){
+          const existing=progress[id];
+          if(!existing || (record.lastPracticed??'')>(existing.lastPracticed??''))progress[id]=record;
+        }
+        setPersonalData(normalizeStudyData({version:2,folders,favorites,progress}));
+      } else {
+        const local=loadPersonalStudyData();
+        const {error:insertError}=await supabase.from('user_study_workspace').upsert({user_id:session.user.id,workspace:local,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+        if(insertError)setSyncStatus('Cloud save error: '+insertError.message);
+      }
+      if(alive){setWorkspaceReady(true);setSyncStatus('Cloud sync connected');}
+    };
+    void syncSession();
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{
+      setAccountEmail(session?.user.email??null);
+      if(!session){setWorkspaceReady(true);setSyncStatus('Saved on this device · sign in for cloud sync');}
+      else {setWorkspaceReady(false);window.setTimeout(()=>{void syncSession();},0);}
+    });
+    return ()=>{alive=false;subscription.unsubscribe();};
+  },[]);
+
+  useEffect(()=>{
+    if(!supabase||!accountEmail||!workspaceReady)return;
+    setSyncStatus('Saving to your account…');
+    const timer=window.setTimeout(async()=>{
+      const {data:{user}}=await supabase.auth.getUser();
+      if(!user)return;
+      const {error}=await supabase.from('user_study_workspace').upsert({user_id:user.id,workspace:personalData,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+      setSyncStatus(error?'Cloud sync error: '+error.message:'All changes synced');
+    },650);
+    return ()=>window.clearTimeout(timer);
+  },[personalData,accountEmail,workspaceReady]);
+
 
   useEffect(() => {
     let alive = true;
@@ -236,7 +294,7 @@ export default function App() {
       stopPlayback(); setTab(id as Tab); setSelection(null); setQuery('');
     }} />
 
-    {tab==='my-stuff' ? <MyStuff items={dbProgressions.map(item=>({id:item.slug,title:item.title,category:item.style}))} value={personalData} onChange={setPersonalData} onOpen={openProgression}/> : <main className="studio-main">
+    {tab==='my-stuff' ? <MyStuff items={dbProgressions.map(item=>({id:item.slug,title:item.title,category:item.style}))} value={personalData} onChange={setPersonalData} onOpen={openProgression} syncStatus={syncStatus} userEmail={accountEmail} onAuthChange={()=>{void supabase?.auth.getUser().then(({data})=>setAccountEmail(data.user?.email??null));}}/> : <main className="studio-main">
       <section className="catalog">
         <div className="catalog-heading">
           <SectionIntro title={header.title} copy={header.copy} meta={data.length + ' LESSONS'} />

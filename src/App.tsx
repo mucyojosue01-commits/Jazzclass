@@ -6,8 +6,10 @@ import TabBar from './components/TabBar';
 import PlayCard from './components/PlayCard';
 import SectionIntro from './components/SectionIntro';
 import usePlayback from './hooks/usePlayback';
+import TheoryLab from './components/TheoryLab';
 
 const TABS = [
+  { id: 'theory', label: 'Theory Lab' },
   { id: 'notes', label: 'Notes' },
   { id: 'scales', label: 'Scales' },
   { id: 'chords', label: 'Chords & Harmony' },
@@ -26,6 +28,7 @@ const noteLessons: Lesson[] = keyNotes.map((n, i) => ({
 }));
 
 const descriptions: Record<Tab, { title: string; copy: string }> = {
+  theory: { title: 'Music theory lab', copy: 'Generate scales, chord qualities, inversions, slash chords, arpeggios and progressions across all 12 keys.' },
   notes: { title: 'The notes of F♯', copy: 'Learn the seven notes of the F♯ major scale and understand the role each degree plays.' },
   scales: { title: 'Scales in F♯', copy: 'Major, minor, modes, pentatonics and blues. Play every scale in a clean, ascending register.' },
   chords: { title: 'Chords & harmony', copy: 'Explore F♯ chord voicings, harmonised scale families and the sound of each chord quality.' },
@@ -57,6 +60,7 @@ export default function App() {
 
   const data = useMemo(() => {
     let items: Lesson[] = [];
+    if (tab === 'theory') items = [];
     if (tab === 'notes') items = noteLessons;
     if (tab === 'scales') items = scaleMode === 'notes' ? scales : scales.filter(s => s.id === 'scale-0' || s.id === 'scale-1').map(s => {
       const pcs = (s.notes as string[]).map(n => ({C:0,'C♯':1,D:2,'D♯':3,E:4,F:5,'F♯':6,G:7,'G♯':8,A:9,'A♯':10,B:11} as Record<string,number>)[n] ?? 0);
@@ -120,6 +124,20 @@ export default function App() {
     }, () => { setLiveNotes([]); setLeftLiveNotes([]); setRightLiveNotes([]); }, velocity / 100 * volume / 100);
   };
 
+  const handleTheoryPlay = async (notes:number[], left:number[], right:number[], title:string, sequence?:{notes:number[];left:number[];right:number[];label:string;beats?:number}[]) => {
+    stopPlayback();
+    setSelection(null);
+    setPlayedNotes([]);
+    await unlockAudio();
+    const steps = sequence?.length
+      ? sequence.map(step => ({notes:step.notes,lh:step.left,rh:step.right,beats:step.beats ?? 1,label:step.label}))
+      : [{notes,lh:left,rh:right,beats:2,label:title}];
+    play({id:'theory-'+title,title,sub:'Generated in JazzClass Music Engine',bpm:tempo,loop,steps},(all,lh,rh)=>{
+      setLiveNotes(all);setLeftLiveNotes(lh);setRightLiveNotes(rh);
+      setPlayedNotes(old=>[...all,...old].slice(0,28));
+    },()=>{setLiveNotes([]);setLeftLiveNotes([]);setRightLiveNotes([]);},velocity/100*volume/100);
+  };
+
   const handleStep = async (item: Lesson, index: number) => {
     const step=item.steps?.[index]; if(!step)return; stopPlayback(); setSelection(item); await unlockAudio();
     const lh = tab === 'progressions' ? step.lh.map(midi) : [];
@@ -170,7 +188,7 @@ export default function App() {
         {tab === 'scales' && <div className="family-switch"><button className={scaleMode==='notes'?'selected':''} onClick={()=>setScaleMode('notes')}>Single notes</button><button className={scaleMode==='harmonized'?'selected':''} onClick={()=>setScaleMode('harmonized')}>Harmonised chords</button>{scaleMode==='harmonized' && <select value={scaleQuality} onChange={e=>setScaleQuality(e.target.value as typeof scaleQuality)}><option value="major">Major</option><option value="minor">Minor</option><option value="sus2">Sus2</option><option value="sus4">Sus4</option></select>}</div>}
         {tab === 'progressions' && <div className="family-switch"><button className={progressionMode==='standard'?'selected':''} onClick={()=>{setProgressionMode('standard');setGenre('All')}}>Chord progressions</button><button className={progressionMode==='slash'?'selected':''} onClick={()=>{setProgressionMode('slash');setGenre('All')}}>Slash chords</button><select value={genre} onChange={e=>setGenre(e.target.value)}>{['All','Jazz','Worship','Praise','Gospel'].map(g=><option key={g}>{g}</option>)}</select></div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
-        {tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
+        {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
           <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} />)}</div>}
         {!data.length && tab !== 'tips' && <div className="empty-state">No lessons match that search.</div>}
       </section>
@@ -202,7 +220,7 @@ export default function App() {
       <p className="audio-footnote">Progressions and slash chords play both hands together: green marks left-hand bass notes and yellow marks right-hand chord tones. Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
     </section>
 
-    <footer className="studio-footer"><b>JAZZCLASS · F♯ PIANO STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
+    <footer className="studio-footer"><b>JAZZCLASS · MUSIC KNOWLEDGE STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
     <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} onKey={handleKey} onStop={stopPlayback} />
   </div>;
 }

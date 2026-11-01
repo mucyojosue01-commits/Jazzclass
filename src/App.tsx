@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { loadProgressionCatalogue, type ProgressionRecord } from './lib/musicRepository';
 import { midi, note, scales, chordScales, chords, progressions, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
 import { playNote, unlockAudio, playMetronomeTick, closeAudio } from './lib/pianoAudio';
 import PianoDock from './components/PianoDock';
@@ -61,11 +62,30 @@ export default function App() {
   const [progressionInversionMode, setProgressionInversionMode] = useState<'right'|'both'>('right');
   const [slashEnabled, setSlashEnabled] = useState(false);
   const [genre, setGenre] = useState('All');
+  const [progressionKey, setProgressionKey] = useState('F♯');
+  const [dbProgressions, setDbProgressions] = useState<ProgressionRecord[]>([]);
+  const [progressionsLoading, setProgressionsLoading] = useState(true);
+  const [progressionsError, setProgressionsError] = useState('');
   const [liveNotes, setLiveNotes] = useState<number[]>([]);
   const [leftLiveNotes, setLeftLiveNotes] = useState<number[]>([]);
   const [rightLiveNotes, setRightLiveNotes] = useState<number[]>([]);
   const [playedNotes, setPlayedNotes] = useState<number[]>([]);
   const { playing, stepIndex, stepNotes, stepLabel, play, stop } = usePlayback();
+
+  useEffect(() => {
+    let alive = true;
+    void loadProgressionCatalogue().then(result => {
+      if (!alive) return;
+      setDbProgressions(result.data);
+      setProgressionsError(result.error ?? '');
+      setProgressionsLoading(false);
+    }).catch(error => {
+      if (!alive) return;
+      setProgressionsError(error instanceof Error ? error.message : 'Could not load progressions.');
+      setProgressionsLoading(false);
+    });
+    return () => { alive = false; };
+  }, []);
 
   const data = useMemo(() => {
     let items: Lesson[] = [];
@@ -78,12 +98,40 @@ export default function App() {
       return {...s,id:s.id+'-harm-'+scaleQuality,title:s.title+' · '+scaleQuality.toUpperCase()+' harmony',category:'Scale harmony · '+scaleQuality,description:'Each scale degree is voiced as a '+scaleQuality+' chord. All right-hand chord tones sound simultaneously.',lh:[],rh:steps[0].rh,steps,notes:steps.map(x=>x.name)};
     });
     if (tab === 'chords') items = [...chords, ...harmonies, ...(showFamilies ? chordScales : [])];
-    if (tab === 'progressions') items = progressions.filter(x => genre === 'All' || x.category === genre).map(item => ({...item, steps:item.steps?.map((step)=>{ const sourceLH=step.lh.map(midi); const root=sourceLH[0] ?? 42; let lh=progressionLeftShape==='three' ? [root,root+7,root+12] : [root,root+7]; let rh=step.rh.map(midi).sort((a,b)=>a-b); const turns=progressionInversion % Math.max(1,rh.length); for(let i=0;i<turns;i++){const n=rh.shift()!;rh.push(n+12);} if(slashEnabled){const bass=root+4;lh=progressionLeftShape==='three'?[bass,bass+7,bass+12]:[bass,bass+7];step={...step,name:step.name+'/'+note(bass)};} if(progressionInversionMode==='both' && progressionInversion>0){const turnsLH=progressionInversion%lh.length;for(let i=0;i<turnsLH;i++){const n=lh.shift()!;lh.push(n+12);}} if(progressionLeftOctave) lh=[lh[0]-12,...lh]; if(progressionRightOctave) rh=[...rh,rh[0]+12]; if(progressionHands==='right') lh=[]; if(progressionHands==='left') rh=[]; return {...step,lh:lh.map(note),rh:rh.map(note)};})}));
+    if (tab === 'progressions') {
+      const pitchClass = ({C:0,'C♯':1,D:2,'D♯':3,E:4,F:5,'F♯':6,G:7,'G♯':8,A:9,'A♯':10,B:11} as Record<string,number>)[progressionKey] ?? 6;
+      const degreeOffsets = [0,2,4,5,7,9,11];
+      const romanValues:Record<string,number> = {I:0,II:1,III:2,IV:3,V:4,VI:5,VII:6};
+      const records = dbProgressions.filter(item => genre === 'All' || item.style === genre);
+      items = records.map(item => {
+        const steps = item.steps.map(step => {
+          const match = step.roman_numeral.match(/^([b#♭♯]?)(VII|VI|IV|V|III|II|I)/i);
+          const numeral = match?.[2]?.toUpperCase() ?? 'I';
+          const accidental = match?.[1] ?? '';
+          const degree = romanValues[numeral] ?? 0;
+          const chromatic = accidental === 'b' || accidental === '♭' ? -1 : accidental === '#' || accidental === '♯' ? 1 : 0;
+          const chordPc = (pitchClass + degreeOffsets[degree] + chromatic + 12) % 12;
+          const bassRoot = 36 + chordPc;
+          const trebleRoot = 60 + chordPc;
+          const lh = (step.left_hand_formula ?? [0,7,14]).map(interval => bassRoot + interval);
+          const rh = (step.right_hand_formula ?? [0,4,7]).map(interval => trebleRoot + interval);
+          return {name:step.roman_numeral+' · '+step.chord_quality,lh:lh.map(note),rh:rh.map(note),beats:Number(step.beats)||2};
+        });
+        const first = steps[0];
+        return {
+          id:item.slug,title:item.title,category:item.style,sub:item.roman_numerals.join(' · '),
+          description:item.description,feel:item.description,
+          lh:first?.lh??[],rh:first?.rh??[],steps,
+          tip:'Key: '+progressionKey+'. Difficulty '+item.difficulty+'/5 · suggested tempo '+item.tempo_min+'–'+item.tempo_max+' BPM. Study the chord function, then practise the voice-leading between each change.',
+          bpm:item.tempo_min
+        } as Lesson;
+      });
+    }
     if (tab === 'arpeggios') items = arpeggios;
     if (tab === 'runs') items = runs;
     const q = query.trim().toLowerCase();
     return q ? items.filter(x => [x.title, x.sub, x.category, x.feel, x.tip].join(' ').toLowerCase().includes(q)) : items;
-  }, [tab, query, showFamilies, scalePlayMode, scaleQuality, progressionLeftShape, progressionHands, progressionLeftOctave, progressionRightOctave, progressionInversion, progressionInversionMode, slashEnabled, genre]);
+  }, [tab, query, showFamilies, scalePlayMode, scaleQuality, progressionLeftShape, progressionHands, progressionLeftOctave, progressionRightOctave, progressionInversion, progressionInversionMode, slashEnabled, genre, progressionKey, dbProgressions]);
 
   useEffect(() => {
     if (!metronome) return;
@@ -195,11 +243,12 @@ export default function App() {
           {tab !== 'tips' && <input className="lesson-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a lesson…" aria-label="Find a lesson" />}
         </div>
         {tab === 'scales' && <div className="arrangement-panel"><div className="family-switch"><button className={scalePlayMode==='single'?'selected':''} onClick={()=>setScalePlayMode('single')}>Single notes</button><button className={scalePlayMode==='harmony'?'selected':''} onClick={()=>setScalePlayMode('harmony')}>Chords / harmonies</button></div>{scalePlayMode==='harmony' && <label className="setting-field">CHORD TYPE<select value={scaleQuality} onChange={e=>setScaleQuality(e.target.value as typeof scaleQuality)}><option value="major">Major</option><option value="minor">Minor</option><option value="diminished">Diminished</option><option value="augmented">Augmented</option><option value="sus2">Suspended 2</option><option value="sus4">Suspended 4</option></select></label>}</div>}
-        {tab === 'progressions' && <div className="arrangement-panel progression-settings"><label className="setting-field">HANDS TO PLAY<select value={progressionHands} onChange={e=>setProgressionHands(e.target.value as 'right'|'left'|'both')}><option value="right">Right hand only</option><option value="left">Left hand only</option><option value="both">Both hands</option></select></label><label className="setting-field">LEFT-HAND FINGERING<select value={progressionLeftShape} onChange={e=>setProgressionLeftShape(e.target.value as 'two'|'three')}><option value="two">2 notes · root + fifth</option><option value="three">3 notes · root + fifth + octave</option></select></label><label className="setting-field">RIGHT-HAND INVERSION<select value={progressionInversion} onChange={e=>setProgressionInversion(+e.target.value)}><option value={0}>Root position</option><option value={1}>1st inversion</option><option value={2}>2nd inversion</option><option value={3}>3rd inversion</option></select></label><label className="setting-field">APPLY INVERSIONS TO<select value={progressionInversionMode} onChange={e=>setProgressionInversionMode(e.target.value as 'right'|'both')}><option value="right">Right hand only</option><option value="both">Both hands</option></select></label><label className="setting-toggle"><input type="checkbox" checked={progressionLeftOctave} onChange={e=>setProgressionLeftOctave(e.target.checked)}/> Add lower octave to left hand</label><label className="setting-toggle"><input type="checkbox" checked={progressionRightOctave} onChange={e=>setProgressionRightOctave(e.target.checked)}/> Add upper octave to right hand</label><label className="setting-toggle"><input type="checkbox" checked={slashEnabled} onChange={e=>setSlashEnabled(e.target.checked)}/> Enable slash-chord bass movement</label><label className="setting-field">STYLE<select value={genre} onChange={e=>setGenre(e.target.value)}>{['All','Jazz','Worship','Praise','Gospel','Pop','Blues'].map(g=><option key={g}>{g}</option>)}</select></label></div>}
+        {tab === 'progressions' && <div className="arrangement-panel progression-settings"><label className="setting-field">KEY<select value={progressionKey} onChange={e=>{setProgressionKey(e.target.value);setSelection(null);stopPlayback();}}>{['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'].map(k=><option key={k}>{k}</option>)}</select></label><label className="setting-field">HANDS TO PLAY<select value={progressionHands} onChange={e=>setProgressionHands(e.target.value as 'right'|'left'|'both')}><option value="right">Right hand only</option><option value="left">Left hand only</option><option value="both">Both hands</option></select></label><label className="setting-field">LEFT-HAND FINGERING<select value={progressionLeftShape} onChange={e=>setProgressionLeftShape(e.target.value as 'two'|'three')}><option value="two">2 notes · root + fifth</option><option value="three">3 notes · root + fifth + octave</option></select></label><label className="setting-field">RIGHT-HAND INVERSION<select value={progressionInversion} onChange={e=>setProgressionInversion(+e.target.value)}><option value={0}>Root position</option><option value={1}>1st inversion</option><option value={2}>2nd inversion</option><option value={3}>3rd inversion</option></select></label><label className="setting-field">APPLY INVERSIONS TO<select value={progressionInversionMode} onChange={e=>setProgressionInversionMode(e.target.value as 'right'|'both')}><option value="right">Right hand only</option><option value="both">Both hands</option></select></label><label className="setting-toggle"><input type="checkbox" checked={progressionLeftOctave} onChange={e=>setProgressionLeftOctave(e.target.checked)}/> Add lower octave to left hand</label><label className="setting-toggle"><input type="checkbox" checked={progressionRightOctave} onChange={e=>setProgressionRightOctave(e.target.checked)}/> Add upper octave to right hand</label><label className="setting-toggle"><input type="checkbox" checked={slashEnabled} onChange={e=>setSlashEnabled(e.target.checked)}/> Enable slash-chord bass movement</label><label className="setting-field">STYLE<select value={genre} onChange={e=>setGenre(e.target.value)}>{['All','Jazz','Worship','Praise','Gospel','Pop','Blues'].map(g=><option key={g}>{g}</option>)}</select></label></div>}
+        {tab === 'progressions' && <div className="catalog-status">{progressionsLoading ? 'Loading 100 professional progressions from JazzClass database…' : progressionsError ? 'Database: '+progressionsError : dbProgressions.length+' progressions loaded · '+progressionKey+' major reference key'}</div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
         {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
           <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} />)}</div>}
-        {!data.length && tab !== 'tips' && <div className="empty-state">No lessons match that search.</div>}
+        {!data.length && tab !== 'tips' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
       </section>
 
       <aside className="lesson-detail">

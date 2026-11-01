@@ -90,6 +90,8 @@ export default function App() {
   const stopPlayback = () => {
     stop();
     setLiveNotes([]);
+    setLeftLiveNotes([]);
+    setRightLiveNotes([]);
   };
 
   const handlePlay = async (item: Lesson) => {
@@ -100,28 +102,38 @@ export default function App() {
     stopPlayback();
     setSelection(item);
     setPlayedNotes([]);
-    const isLeftOnly = tab === 'progressions' || tab === 'runs';
+    const isProgression = tab === 'progressions';
     const sourceSteps = item.steps?.length
-      ? item.steps.map(s => ({ notes: (isLeftOnly ? s.lh : s.rh).map(midi), beats: s.beats ?? 2, label: s.name }))
-      : (isLeftOnly ? item.lh : item.rh).map((n, i) => ({ notes: [midi(n)], beats: tab === 'runs' ? 0.5 : 0.5, label: n }));
+      ? item.steps.map(s => {
+          const lh = isProgression ? s.lh.map(midi) : [];
+          const rh = isProgression ? s.rh.map(midi) : (tab === 'runs' ? [] : s.rh.map(midi));
+          return { notes: [...lh, ...rh], lh, rh, beats: s.beats ?? 2, label: s.name };
+        })
+      : (tab === 'runs' ? item.lh : item.rh).map(n => ({ notes: [midi(n)], lh: [], rh: [midi(n)], beats: 0.5, label: n }));
     const playable = { id: item.id, title: item.title, sub: item.sub ?? '', bpm: tempo, loop, steps: sourceSteps };
     await unlockAudio();
-    play(playable, (notes) => {
+    play(playable, (notes, lh, rh) => {
       setLiveNotes(notes);
+      setLeftLiveNotes(lh);
+      setRightLiveNotes(rh);
       setPlayedNotes(old => [...notes, ...old].slice(0, 28));
-    }, () => setLiveNotes([]), velocity / 100 * volume / 100);
+    }, () => { setLiveNotes([]); setLeftLiveNotes([]); setRightLiveNotes([]); }, velocity / 100 * volume / 100);
   };
 
   const handleStep = async (item: Lesson, index: number) => {
     const step=item.steps?.[index]; if(!step)return; stopPlayback(); setSelection(item); await unlockAudio();
-    const notes=(tab==='progressions'||tab==='chords')?[...step.lh,...step.rh]:tab==='runs'?step.lh:step.rh;
-    play({id:item.id+'-step-'+index,title:item.title,sub:step.name,bpm:tempo,loop:false,steps:[{notes:notes.map(midi),beats:2,label:step.name}]},setLiveNotes,()=>setLiveNotes([]),velocity/100*volume/100);
+    const lh = tab === 'progressions' ? step.lh.map(midi) : [];
+    const rh = tab === 'progressions' ? step.rh.map(midi) : (tab === 'runs' ? [] : step.rh.map(midi));
+    const notes = [...lh, ...rh];
+    play({id:item.id+'-step-'+index,title:item.title,sub:step.name,bpm:tempo,loop:false,steps:[{notes,lh,rh,beats:2,label:step.name}]},(all,left,right)=>{setLiveNotes(all);setLeftLiveNotes(left);setRightLiveNotes(right);},()=>{setLiveNotes([]);setLeftLiveNotes([]);setRightLiveNotes([]);},velocity/100*volume/100);
   };
 
   const handleKey = async (m: number) => {
     await unlockAudio();
     playNote(m, { duration: 1.5, velocity: velocity / 100 * volume / 100 });
     setLiveNotes([m]);
+    setLeftLiveNotes([]);
+    setRightLiveNotes([]);
     setPlayedNotes(old => [m, ...old].slice(0, 28));
     window.setTimeout(() => setLiveNotes(old => old.filter(n => n !== m)), 900);
   };
@@ -187,7 +199,7 @@ export default function App() {
         <label className="check-control"><input type="checkbox" checked={metronome} onChange={e => setMetronome(e.target.checked)} /> Metronome</label>
         <button className="stop-button" onClick={stopPlayback}>■ Stop playback</button>
       </div>
-      <p className="audio-footnote">Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
+      <p className="audio-footnote">Progressions and slash chords play both hands together: light green marks left-hand bass notes and green marks right-hand chord tones. Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
     </section>
 
     <footer className="studio-footer"><b>JAZZCLASS · F♯ PIANO STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>

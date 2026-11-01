@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CHORD_TYPES, KEY_OPTIONS, PROGRESSION_TEMPLATES, SCALE_TYPES, invertChord, makeArpeggio, makeChord, makeScale, makeSlashChord, midiName, pitchName, realizeProgression } from '../musicTheory';
-type TheoryStep={notes:number[];left:number[];right:number[];label:string;beats?:number};\ntype Props={onPlay:(notes:number[],left:number[],right:number[],title:string,sequence?:TheoryStep[])=>void};
+type TheoryStep={notes:number[];left:number[];right:number[];label:string;beats?:number};
+type Props={onPlay:(notes:number[],left:number[],right:number[],title:string,sequence?:TheoryStep[])=>void};
 const cardStyle={border:'1px solid rgba(255,255,255,.1)',borderRadius:12,padding:14,background:'#111114'} as const;
 const selectStyle={width:'100%',background:'#17171b',color:'#f3eee3',border:'1px solid #35353b',borderRadius:7,padding:'10px 9px',font:'inherit'} as const;
 export default function TheoryLab({onPlay}:Props){

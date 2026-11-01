@@ -53,7 +53,7 @@ export function realizeProgression(steps:ProgressionStepRecord[],o:ProgressionVo
   for(let i=0;i<o.inversion%Math.max(1,rh.length);i++){const n=rh.shift()!;rh.push(n+12);}
   rh=lead(rh,previousRight);
   if(o.rightOctave&&rh.length)rh=[...rh,rh[0]+12];
-  const chordBassOptions=[rootPc,...ints.slice(1).map(i=>pc(rootPc+i))];
+  const chordBassOptions=[rootPc,pc(rootPc+(ints[1]??4)),pc(rootPc+(ints[2]??7))];
   let bassPc=r.slash===null?rootPc:pc(tonic+r.slash);
   if(o.slashEnabled&&r.slash===null&&previousBass!==null){
    bassPc=chordBassOptions.map(p=>nearest(36+p,previousBass!,28,52)).sort((a,b)=>Math.abs(a-previousBass!)-Math.abs(b-previousBass!))[0]%12;
@@ -64,6 +64,6 @@ export function realizeProgression(steps:ProgressionStepRecord[],o:ProgressionVo
   if(o.leftOctave)lh=[lh[0]-12,...lh];
   if(o.hands==='right')lh=[];if(o.hands==='left')rh=[];
   if(o.hands!=='left')previousRight=rh.filter(n=>n>=55&&n<=84);
-  return {name:step.roman_numeral+' · '+step.chord_quality+(r.slash!==null?' / '+midiName(bass):''),lh:lh.map(midiName),rh:rh.map(midiName),beats:Number(step.beats)||2};
+  return {name:step.roman_numeral+' · '+step.chord_quality+(bassPc!==rootPc?' / '+midiName(bass):''),lh:lh.map(midiName),rh:rh.map(midiName),beats:Number(step.beats)||2};
  });
 }

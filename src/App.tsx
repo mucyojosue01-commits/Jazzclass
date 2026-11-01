@@ -86,15 +86,16 @@ export default function App() {
   useEffect(() => { savePersonalStudyData(personalData); },[personalData]);
 
   useEffect(() => {
-    if(!supabase){setWorkspaceReady(true);setSyncStatus('Local storage only · cloud unavailable');return;}
+    const client=supabase;
+    if(!client){setWorkspaceReady(true);setSyncStatus('Local storage only · cloud unavailable');return;}
     let alive=true;
     const syncSession=async()=>{
-      const {data:{session}}=await supabase.auth.getSession();
+      const {data:{session}}=await client.auth.getSession();
       if(!alive)return;
       setAccountEmail(session?.user.email??null);
       if(!session){setWorkspaceReady(true);setSyncStatus('Saved on this device · sign in for cloud sync');return;}
       setSyncStatus('Loading your cloud workspace…');
-      const {data,error}=await supabase.from('user_study_workspace').select('workspace').eq('user_id',session.user.id).maybeSingle();
+      const {data,error}=await client.from('user_study_workspace').select('workspace').eq('user_id',session.user.id).maybeSingle();
       if(!alive)return;
       if(error){setSyncStatus('Cloud sync error: '+error.message);setWorkspaceReady(true);return;}
       if(data?.workspace){
@@ -111,13 +112,13 @@ export default function App() {
         setPersonalData(normalizeStudyData({version:2,folders,favorites,progress}));
       } else {
         const local=loadPersonalStudyData();
-        const {error:insertError}=await supabase.from('user_study_workspace').upsert({user_id:session.user.id,workspace:local,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+        const {error:insertError}=await client.from('user_study_workspace').upsert({user_id:session.user.id,workspace:local,updated_at:new Date().toISOString()},{onConflict:'user_id'});
         if(insertError)setSyncStatus('Cloud save error: '+insertError.message);
       }
       if(alive){setWorkspaceReady(true);setSyncStatus('Cloud sync connected');}
     };
     void syncSession();
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{
+    const {data:{subscription}}=client.auth.onAuthStateChange((_event,session)=>{
       setAccountEmail(session?.user.email??null);
       if(!session){setWorkspaceReady(true);setSyncStatus('Saved on this device · sign in for cloud sync');}
       else {setWorkspaceReady(false);window.setTimeout(()=>{void syncSession();},0);}
@@ -126,12 +127,13 @@ export default function App() {
   },[]);
 
   useEffect(()=>{
-    if(!supabase||!accountEmail||!workspaceReady)return;
+    const client=supabase;
+    if(!client||!accountEmail||!workspaceReady)return;
     setSyncStatus('Saving to your account…');
     const timer=window.setTimeout(async()=>{
-      const {data:{user}}=await supabase.auth.getUser();
+      const {data:{user}}=await client.auth.getUser();
       if(!user)return;
-      const {error}=await supabase.from('user_study_workspace').upsert({user_id:user.id,workspace:personalData,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+      const {error}=await client.from('user_study_workspace').upsert({user_id:user.id,workspace:personalData,updated_at:new Date().toISOString()},{onConflict:'user_id'});
       setSyncStatus(error?'Cloud sync error: '+error.message:'All changes synced');
     },650);
     return ()=>window.clearTimeout(timer);

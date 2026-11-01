@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadProgressionCatalogue, type ProgressionRecord } from './lib/musicRepository';
+import { realizeProgression } from './progressionEngine';
 import { midi, note, scales, chordScales, chords, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
 import { playNote, unlockAudio, playMetronomeTick, closeAudio } from './lib/pianoAudio';
 import PianoDock from './components/PianoDock';
@@ -99,41 +100,19 @@ export default function App() {
     });
     if (tab === 'chords') items = [...chords, ...harmonies, ...(showFamilies ? chordScales : [])];
     if (tab === 'progressions') {
-      const pitchClass = ({C:0,'C♯':1,D:2,'D♯':3,E:4,F:5,'F♯':6,G:7,'G♯':8,A:9,'A♯':10,B:11} as Record<string,number>)[progressionKey] ?? 6;
-      const degreeOffsets = [0,2,4,5,7,9,11];
-      const romanValues:Record<string,number> = {I:0,II:1,III:2,IV:3,V:4,VI:5,VII:6};
       const records = dbProgressions.filter(item => genre === 'All' || item.style === genre);
       items = records.map(item => {
-        const steps = item.steps.map(step => {
-          const match = step.roman_numeral.match(/^([b#♭♯]?)(VII|VI|IV|V|III|II|I)/i);
-          const numeral = match?.[2]?.toUpperCase() ?? 'I';
-          const accidental = match?.[1] ?? '';
-          const degree = romanValues[numeral] ?? 0;
-          const chromatic = accidental === 'b' || accidental === '♭' ? -1 : accidental === '#' || accidental === '♯' ? 1 : 0;
-          const chordPc = (pitchClass + degreeOffsets[degree] + chromatic + 12) % 12;
-          const bassRoot = 36 + chordPc;
-          const trebleRoot = 60 + chordPc;
-          const sourceLH = (step.left_hand_formula ?? [0,7,14]).map(interval => bassRoot + interval);
-          const root = sourceLH[0] ?? bassRoot;
-          let lh = progressionLeftShape === 'three' ? [root,root+7,root+12] : [root,root+7];
-          let rh = (step.right_hand_formula ?? [0,4,7]).map(interval => trebleRoot + interval).sort((a,b)=>a-b);
-          const turns = progressionInversion % Math.max(1,rh.length);
-          for(let i=0;i<turns;i++){const n=rh.shift()!;rh.push(n+12);}
-          let name = step.roman_numeral+' · '+step.chord_quality;
-          if(slashEnabled){const bass=root+4;lh=progressionLeftShape==='three'?[bass,bass+7,bass+12]:[bass,bass+7];name += ' / '+note(bass);}
-          if(progressionInversionMode==='both' && progressionInversion>0){const turnsLH=progressionInversion%lh.length;for(let i=0;i<turnsLH;i++){const n=lh.shift()!;lh.push(n+12);}}
-          if(progressionLeftOctave)lh=[lh[0]-12,...lh];
-          if(progressionRightOctave && rh.length)rh=[...rh,rh[0]+12];
-          if(progressionHands==='right')lh=[];
-          if(progressionHands==='left')rh=[];
-          return {name,lh:lh.map(note),rh:rh.map(note),beats:Number(step.beats)||2};
+        const steps = realizeProgression(item.steps, {
+          key:progressionKey,leftShape:progressionLeftShape,hands:progressionHands,
+          inversion:progressionInversion,inversionMode:progressionInversionMode,
+          leftOctave:progressionLeftOctave,rightOctave:progressionRightOctave,slashEnabled
         });
-        const first = steps[0];
+        const first=steps[0];
         return {
           id:item.slug,title:item.title,category:item.style,sub:item.roman_numerals.join(' · '),
           description:item.description,feel:item.description,
           lh:first?.lh??[],rh:first?.rh??[],steps,
-          tip:'Key: '+progressionKey+'. Difficulty '+item.difficulty+'/5 · suggested tempo '+item.tempo_min+'–'+item.tempo_max+' BPM. Study the chord function, then practise the voice-leading between each change.',
+          tip:'Key: '+progressionKey+'. Difficulty '+item.difficulty+'/5 · suggested tempo '+item.tempo_min+'–'+item.tempo_max+' BPM. Voicings are generated from chord quality and Roman-numeral function, with close voice-leading between right-hand chords.',
           bpm:item.tempo_min
         } as Lesson;
       });

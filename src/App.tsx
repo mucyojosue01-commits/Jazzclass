@@ -180,7 +180,7 @@ export default function App() {
         {current ? <>
           <h2>{current.title}</h2><span className="detail-sub">{current.sub || current.category}</span>
           <p className="detail-copy">{current.feel ?? current.description}</p>
-          {tab === 'progressions' ? <><div className="hand-card left-hand"><b>LEFT HAND · BASS / SLASH NOTE</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Blue markers</small></div><div className="hand-card green-hand"><b>RIGHT HAND · CHORD VOICING</b><p>{current.rh.join('  ·  ') || '—'}</p><small>Green markers · chord tones played together</small></div></> : tab === 'runs' ? <div className="hand-card left-hand"><b>LEFT HAND</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Left-hand notes · blue markers</small></div> : <div className="hand-card right-hand"><b>RIGHT HAND</b><p>{current.rh.join('  ·  ') || current.notes?.join(' · ') || '—'}</p><small>Scale and chord notes · chocolate markers</small></div>}
+          {tab === 'progressions' ? <><div className="hand-card left-hand"><b>LEFT HAND · GREEN · BASS / SLASH NOTE</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Green markers · left hand</small></div><div className="hand-card green-hand"><b>RIGHT HAND · YELLOW · CHORD VOICING</b><p>{current.rh.join('  ·  ') || '—'}</p><small>Yellow markers · right-hand chord tones</small></div></> : tab === 'runs' ? <div className="hand-card left-hand"><b>LEFT HAND</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Left-hand notes · green markers</small></div> : <div className="hand-card right-hand"><b>RIGHT HAND</b><p>{current.rh.join('  ·  ') || current.notes?.join(' · ') || '—'}</p><small>Scale and chord notes · yellow markers</small></div>}
           {current.steps?.length ? <div className="step-list"><b>CHORD-BY-CHORD MOVEMENT</b>{current.steps.map((step, i) => <button type="button" className={'step-row ' + (stepIndex === i ? 'step-active' : '')} key={step.name} onClick={() => void handleStep(current, i)}><span>{String(i + 1).padStart(2, '0')} · {step.name}</span><small>{tab === 'progressions' ? 'LH '+step.lh.join(' + ')+'  ·  RH '+step.rh.join(' + ') : 'RH ' + step.rh.join(' + ')}</small><em>▶</em></button>)}</div> : null}
           <div className="playing-tip"><b>PLAYING TIP</b><p>{current.tip}</p>{current.target && <small>Suggested destination: {current.target}</small>}</div>
           <div className="detail-actions"><button className="play-primary" onClick={() => void handlePlay(current)}>{playing && selection?.id === current.id ? 'Ⅱ PAUSE / STOP' : '▶ PLAY LESSON'}</button><button className="stop-button" onClick={stopPlayback}>■ Stop</button></div>
@@ -189,7 +189,7 @@ export default function App() {
     </main>
 
     <section className="practice-panel">
-      <div className="practice-heading"><div><div className="detail-kicker">LIVE PIANO · EVERY NOTE IS VISIBLE</div><h2>Practice keyboard</h2><p>White and black keys only. Blue = left hand · green = progression right hand · chocolate = other right-hand notes · amber = free play.</p></div><span className="audio-badge"><i /> BROWSER AUDIO ENGINE</span></div>
+      <div className="practice-heading"><div><div className="detail-kicker">LIVE PIANO · EVERY NOTE IS VISIBLE</div><h2>Practice keyboard</h2><p>White and black keys only. Green = left hand · yellow = right hand · amber = free play.</p></div><span className="audio-badge"><i /> BROWSER AUDIO ENGINE</span></div>
       <div className="now-playing"><b>NOW PLAYING</b><div>{playedNotes.length ? playedNotes.map((n, i) => <span key={i} className={active.includes(n) ? 'note-chip active-chip' : 'note-chip'}>{note(n)}</span>) : <small>Notes and chord tones will appear here as they sound.</small>}</div></div>
       <div className="practice-controls">
         <label>TEMPO <strong>{tempo} BPM</strong><input type="range" min="48" max="120" value={tempo} onChange={e => setTempo(+e.target.value)} /></label>
@@ -199,7 +199,7 @@ export default function App() {
         <label className="check-control"><input type="checkbox" checked={metronome} onChange={e => setMetronome(e.target.checked)} /> Metronome</label>
         <button className="stop-button" onClick={stopPlayback}>■ Stop playback</button>
       </div>
-      <p className="audio-footnote">Progressions and slash chords play both hands together: light green marks left-hand bass notes and green marks right-hand chord tones. Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
+      <p className="audio-footnote">Progressions and slash chords play both hands together: green marks left-hand bass notes and yellow marks right-hand chord tones. Piano tones are generated locally with the Web Audio API — no sample library or piano plug-in is downloaded. Audio begins after your first tap, as required by browser autoplay rules.</p>
     </section>
 
     <footer className="studio-footer"><b>JAZZCLASS · F♯ PIANO STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>

@@ -9,7 +9,7 @@ export default function TheoryLab({onPlay}:Props){
  const key=KEY_OPTIONS[root],scale=SCALE_TYPES.find(x=>x.id===scaleId)!,chord=CHORD_TYPES.find(x=>x.id===chordId)!;
  const scaleNotes=useMemo(()=>makeScale(root,scale,4),[root,scale]);
  const chordNotes=useMemo(()=>invertChord(makeChord(root,chord,octave),inversion),[root,chord,octave,inversion]);
- const progression=useMemo(()=>realizeProgression(root,PROGRESSION_TEMPLATES.find(x=>x.id===progressionId)!,2,progressionInversion),[root,progressionId]);
+ const progression=useMemo(()=>realizeProgression(root,PROGRESSION_TEMPLATES.find(x=>x.id===progressionId)!,2,progressionInversion),[root,progressionId,progressionInversion]);
  const playTogether=(notes:number[],title:string)=>onPlay(notes,[],notes,title);
  const label=(notes:number[])=>notes.map(midiName).join(' · ');
  return <section style={{display:'grid',gap:14}}>

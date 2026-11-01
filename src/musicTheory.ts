@@ -47,7 +47,19 @@ export const CHORD_TYPES:ChordDefinition[] = [
  {id:'quartal',name:'Quartal stack',symbol:'quartal',family:'Modern',intervals:[0,5,10,15]}
 ];
 export const HARMONY_TYPES = [{id:'thirds',name:'Diatonic thirds',step:2},{id:'fourths',name:'Diatonic fourths',step:3},{id:'fifths',name:'Diatonic fifths',step:4},{id:'sixths',name:'Diatonic sixths',step:5}] as const;
-export const LICK_TEMPLATES = [\n {id:'upper-turn',name:'Upper neighbour turn',style:'Jazz',intervals:[0,2,1,0],description:'A short turn around the root.'},\n {id:'dominant-enclosure',name:'Dominant enclosure',style:'Jazz',intervals:[7,10,11,9],description:'Enclose a guide tone and resolve.'},\n {id:'gospel-pickup',name:'Gospel pickup',style:'Gospel',intervals:[4,5,9],description:'A compact pickup into the tonic.'},\n {id:'minor-outline',name:'Minor seventh outline',style:'Jazz / R&B',intervals:[0,3,7,10],description:'Outline a minor seventh chord.'},\n {id:'major-six-nine',name:'Major 6/9 fragment',style:'Jazz / Worship',intervals:[0,4,7,9,14],description:'A warm major-colour fragment.'},\n {id:'chromatic-approach',name:'Chromatic lower approach',style:'Jazz',intervals:[2,1,0],description:'Resolve a semitone into a chord tone.'},\n {id:'dominant-nine',name:'Dominant ninth fragment',style:'Jazz / Blues',intervals:[4,7,10,14],description:'Outline dominant extensions.'},\n {id:'descending-tones',name:'Descending chord tones',style:'Gospel / Jazz',intervals:[11,7,4,0],description:'Descend through chord tones.'},\n {id:'double-note',name:'Double-note answer',style:'Worship / Pop',intervals:[0,4,7,4],description:'A compact melodic answer.'},\n {id:'turnaround-tag',name:'Jazz turnaround tag',style:'Jazz',intervals:[7,9,10,11,12],description:'A short dominant tag resolving home.'}\n] as const;\nexport const PROGRESSION_TEMPLATES = [
+export const LICK_TEMPLATES = [
+ {id:'upper-turn',name:'Upper neighbour turn',style:'Jazz',intervals:[0,2,1,0],description:'A short turn around the root.'},
+ {id:'dominant-enclosure',name:'Dominant enclosure',style:'Jazz',intervals:[7,10,11,9],description:'Enclose a guide tone and resolve.'},
+ {id:'gospel-pickup',name:'Gospel pickup',style:'Gospel',intervals:[4,5,9],description:'A compact pickup into the tonic.'},
+ {id:'minor-outline',name:'Minor seventh outline',style:'Jazz / R&B',intervals:[0,3,7,10],description:'Outline a minor seventh chord.'},
+ {id:'major-six-nine',name:'Major 6/9 fragment',style:'Jazz / Worship',intervals:[0,4,7,9,14],description:'A warm major-colour fragment.'},
+ {id:'chromatic-approach',name:'Chromatic lower approach',style:'Jazz',intervals:[2,1,0],description:'Resolve a semitone into a chord tone.'},
+ {id:'dominant-nine',name:'Dominant ninth fragment',style:'Jazz / Blues',intervals:[4,7,10,14],description:'Outline dominant extensions.'},
+ {id:'descending-tones',name:'Descending chord tones',style:'Gospel / Jazz',intervals:[11,7,4,0],description:'Descend through chord tones.'},
+ {id:'double-note',name:'Double-note answer',style:'Worship / Pop',intervals:[0,4,7,4],description:'A compact melodic answer.'},
+ {id:'turnaround-tag',name:'Jazz turnaround tag',style:'Jazz',intervals:[7,9,10,11,12],description:'A short dominant tag resolving home.'}
+] as const;
+export const PROGRESSION_TEMPLATES = [
  {id:'jazz251',name:'Jazz ii–V–I',style:'Jazz',degrees:['ii7','V7','Imaj7'],description:'Foundational major-key jazz cadence.'},
  {id:'jazz36251',name:'Jazz iii–VI–ii–V–I',style:'Jazz',degrees:['iii7','VI7','ii7','V7','Imaj7'],description:'Extended cycle resolving to tonic.'},
  {id:'gospel',name:'Gospel turnaround',style:'Gospel',degrees:['Imaj7','vi7','ii7','V7'],description:'A common gospel turnaround.'},

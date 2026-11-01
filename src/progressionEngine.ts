@@ -16,6 +16,10 @@ function parseRoman(symbol:string){
 }
 function intervals(qty:string,suffix:string){
  const q=qty.toLowerCase();
+ if(/^m(9|7)$/.test(suffix))return suffix==='m9'?[0,3,7,10,14]:[0,3,7,10];
+ if(/^m$/.test(suffix))return [0,3,7];
+ if(/^maj(9|7)$/.test(suffix))return suffix==='maj9'?[0,4,7,11,14]:[0,4,7,11];
+ if(/^add(2|9)$/.test(suffix))return [0,2,4,7];
  if(q.includes('half_diminished'))return [0,3,6,10];
  if(q.includes('diminished7'))return [0,3,6,9];
  if(q.includes('diminished'))return [0,3,6];

@@ -202,3 +202,23 @@
 .academy-note-readout>span{font-size:8px;letter-spacing:.16em;color:#91a497}
 .academy-note-readout>div{display:flex;flex-wrap:wrap;gap:6px}
 .academy-note-readout b{padding:5px 8px;border:1px solid rgba(137,178,147,.2);border-radius:6px;background:#19221c;color:#d5e3d8;font-size:9px;font-weight:500}
+
+
+/* Theory Lab dual workspace and exploratory controls */
+.theory-workspace-tabs{display:flex;gap:7px;padding:4px;border:1px solid var(--line);border-radius:10px;background:#101013;width:max-content;max-width:100%}
+.theory-workspace-tabs button{border:1px solid transparent;border-radius:7px;background:transparent;color:var(--muted);padding:9px 13px;font:500 10px Inter,system-ui,sans-serif}
+.theory-workspace-tabs button.active{background:#202923;border-color:rgba(155,178,163,.35);color:#d6e0d8}
+.theory-explorer-tabs{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
+.theory-explorer-tabs button{flex:none;border:1px solid var(--line);border-radius:8px;background:#111114;color:#aaa;padding:10px 13px;font:500 10px Inter,system-ui,sans-serif;white-space:nowrap}
+.theory-explorer-tabs button.selected{background:#202923;border-color:rgba(155,178,163,.45);color:#d6e0d8}
+.theory-explorer-panel{display:grid;gap:16px;padding:17px;border:1px solid var(--line);border-radius:13px;background:#101013}
+.theory-explorer-controls{display:flex;flex-wrap:wrap;gap:12px}
+.theory-explorer-controls label{display:grid;gap:6px;min-width:155px;color:#9eada3;font:600 8px Inter,system-ui,sans-serif;letter-spacing:.12em}
+.theory-explorer-controls select{min-width:155px;max-width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#17171b;color:#e7e7e0;font:11px Inter,system-ui,sans-serif;letter-spacing:0}
+.theory-explorer-result{display:grid;gap:12px;padding-top:14px;border-top:1px solid var(--line)}
+.theory-explorer-result h3{margin:6px 0;font:28px/1.1 var(--display);font-weight:400;color:#eee9df}
+.theory-explorer-result p{margin:0;color:var(--muted);font-size:11px;line-height:1.6}
+.theory-note-chips{display:flex;flex-wrap:wrap;gap:7px}
+.theory-note-chips span{padding:7px 9px;border:1px solid rgba(155,178,163,.25);border-radius:7px;background:#19221c;color:#d5e3d8;font:500 10px Inter,system-ui,sans-serif}
+.theory-play-button{justify-self:start;border:1px solid rgba(155,178,163,.4);border-radius:8px;background:#202923;color:#d6e0d8;padding:11px 15px;font:600 10px Inter,system-ui,sans-serif}
+@media(max-width:560px){.theory-explorer-panel{padding:13px}.theory-explorer-controls{display:grid;grid-template-columns:1fr 1fr}.theory-explorer-controls label,.theory-explorer-controls select{min-width:0;width:100%}.theory-workspace-tabs{width:100%}.theory-workspace-tabs button{flex:1}}

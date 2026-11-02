@@ -13,7 +13,8 @@ export default function usePlayback() {
   const timer=useRef<number|null>(null);
   const deadline=useRef(0);
   const remaining=useRef(0);
-  const generation=useRef(0);\n  const noteHandles=useRef<{stop:()=>void}[]>([]);
+  const generation=useRef(0);
+  const noteHandles=useRef<{stop:()=>void}[]>([]);
   const itemRef=useRef<Item|null>(null);
   const callbacks=useRef<{onStep:(notes:number[],lh:number[],rh:number[])=>void;onFinish:()=>void;velocity:number}>({onStep:()=>{},onFinish:()=>{},velocity:.5});
   const indexRef=useRef(0);

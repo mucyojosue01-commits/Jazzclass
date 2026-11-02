@@ -80,7 +80,7 @@ export default function App() {
   const [leftLiveNotes, setLeftLiveNotes] = useState<number[]>([]);
   const [rightLiveNotes, setRightLiveNotes] = useState<number[]>([]);
   const [playedNotes, setPlayedNotes] = useState<number[]>([]);
-  const { playing, stepIndex, stepNotes, stepLabel, play, stop } = usePlayback();
+  const { playing, paused, stepIndex, stepNotes, stepLabel, play, stop, pause, resume } = usePlayback();
 
 
   useEffect(() => { savePersonalStudyData(personalData); },[personalData]);
@@ -207,6 +207,7 @@ export default function App() {
 
   const stopPlayback = () => {
     stop();
+    setPlayedNotes([]);
     setLiveNotes([]);
     setLeftLiveNotes([]);
     setRightLiveNotes([]);
@@ -223,6 +224,8 @@ export default function App() {
       return;
     }
     stopPlayback();
+    setSelection(null);
+    setLiveNotes([]); setLeftLiveNotes([]); setRightLiveNotes([]);
     setSelection(item);
     setPlayedNotes([]);
     const isProgression = tab === 'progressions';
@@ -318,7 +321,7 @@ export default function App() {
         {!data.length && tab !== 'tips' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
       </section>
 
-      {tab!=='theory' && <aside className="lesson-detail">
+      {tab!=='theory' && <aside key={selection?.id ?? 'no-selected-lesson'} className="lesson-detail">
         <div className="detail-kicker">LESSON DETAILS</div>
         {current ? <>
           <h2>{current.title}</h2><span className="detail-sub">{current.sub || current.category}</span>
@@ -346,6 +349,6 @@ export default function App() {
     </section>}
 
     <footer className="studio-footer"><b>JAZZCLASS · MUSIC KNOWLEDGE STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
-    {tab!=='my-stuff' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} onKey={handleKey} onStop={stopPlayback} />}
+    {tab!=='my-stuff' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
   </div>;
 }

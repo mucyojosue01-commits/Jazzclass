@@ -223,11 +223,13 @@ export default function App() {
     const isProgression = tab === 'progressions';
     const sourceSteps = item.steps?.length
       ? item.steps.map(s => {
-          const lh = isProgression ? s.lh.map(midi) : [];
-          const rh = isProgression ? s.rh.map(midi) : (tab === 'runs' ? [] : s.rh.map(midi));
+          const lh = (isProgression || tab === 'chords') ? s.lh.map(midi) : [];
+          const rh = tab === 'runs' ? [] : s.rh.map(midi);
           return { notes: [...lh, ...rh], lh, rh, beats: s.beats ?? 2, label: s.name };
         })
-      : tab === 'chords'\n        ? [{ notes: [...item.lh, ...item.rh].map(midi), lh: item.lh.map(midi), rh: item.rh.map(midi), beats: 2, label: item.title }]\n        : (tab === 'runs' ? item.lh : item.rh).map(n => ({ notes: [midi(n)], lh: [], rh: [midi(n)], beats: 0.5, label: n }));
+      : tab === 'chords'
+        ? [{ notes: [...item.lh, ...item.rh].map(midi), lh: item.lh.map(midi), rh: item.rh.map(midi), beats: 2, label: item.title }]
+        : (tab === 'runs' ? item.lh : item.rh).map(n => ({ notes: [midi(n)], lh: [], rh: [midi(n)], beats: 0.5, label: n }));
     const playable = { id: item.id, title: item.title, sub: item.sub ?? '', bpm: tempo, loop, steps: sourceSteps };
     if(isProgression) setPersonalData(old=>recordPractice(old,item.id,false));
     await unlockAudio();
@@ -255,8 +257,8 @@ export default function App() {
 
   const handleStep = async (item: Lesson, index: number) => {
     const step=item.steps?.[index]; if(!step)return; stopPlayback(); setSelection(item); setPlayedNotes([]); await unlockAudio();
-    const lh = tab === 'progressions' ? step.lh.map(midi) : [];
-    const rh = tab === 'progressions' ? step.rh.map(midi) : (tab === 'runs' ? [] : step.rh.map(midi));
+    const lh = (tab === 'progressions' || tab === 'chords') ? step.lh.map(midi) : [];
+    const rh = tab === 'runs' ? [] : step.rh.map(midi);
     const notes = [...lh, ...rh];
     play({id:item.id+'-step-'+index,title:item.title,sub:step.name,bpm:tempo,loop:false,steps:[{notes,lh,rh,beats:2,label:step.name}]},(all,left,right)=>{setLiveNotes(all);setLeftLiveNotes(left);setRightLiveNotes(right);},()=>{setLiveNotes([]);setLeftLiveNotes([]);setRightLiveNotes([]);},velocity/100*volume/100);
   };

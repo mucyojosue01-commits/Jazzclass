@@ -12,3 +12,6 @@ export function playChord(notes:number[],opts:{when?:number;duration?:number;vel
 
 export function playMetronomeTick(accent=false):void{const ac=getCtx();if(!ac||!master)return;if(ac.state==='suspended')void ac.resume().catch(()=>{});const osc=ac.createOscillator(),gain=ac.createGain();osc.type='sine';osc.frequency.value=accent?1000:700;gain.gain.setValueAtTime(.0001,ac.currentTime);gain.gain.exponentialRampToValueAtTime(.035,ac.currentTime+.002);gain.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.045);osc.connect(gain);gain.connect(master);osc.start();osc.stop(ac.currentTime+.05);}
 export function closeAudio():void{if(ctx){const old=ctx;ctx=null;master=null;void old.close().catch(()=>{});}}
+
+export async function suspendAudio():Promise<void>{if(ctx&&ctx.state==='running')await ctx.suspend().catch(()=>{});}
+export async function resumeAudio():Promise<void>{if(ctx&&ctx.state==='suspended')await ctx.resume().catch(()=>{});}

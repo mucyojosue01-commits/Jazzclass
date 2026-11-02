@@ -323,7 +323,7 @@ export default function App() {
           <div className="playing-tip"><b>PLAYING TIP</b><p>{current.tip}</p>{current.target && <small>Suggested destination: {current.target}</small>}</div>
           <div className="detail-actions"><button className="play-primary" onClick={() => void handlePlay(current)}>{playing && selection?.id === current.id ? 'Ⅱ PAUSE / STOP' : '▶ PLAY LESSON'}</button><button className="stop-button" onClick={stopPlayback}>■ Stop</button></div>
         </> : <div className="empty-state">Choose a lesson to see its notes, hand position and practice advice.</div>}
-      </aside>
+      </aside>}
     </main>}
 
     {tab!=='my-stuff' && <section className="practice-panel">

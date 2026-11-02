@@ -13,15 +13,15 @@ export default function usePlayback() {
   const timer=useRef<number|null>(null);
   const deadline=useRef(0);
   const remaining=useRef(0);
-  const generation=useRef(0);
+  const generation=useRef(0);\n  const noteHandles=useRef<{stop:()=>void}[]>([]);
   const itemRef=useRef<Item|null>(null);
   const callbacks=useRef<{onStep:(notes:number[],lh:number[],rh:number[])=>void;onFinish:()=>void;velocity:number}>({onStep:()=>{},onFinish:()=>{},velocity:.5});
   const indexRef=useRef(0);
 
   const clearTimer=()=>{if(timer.current!==null){window.clearTimeout(timer.current);timer.current=null;}};
   const stop=useCallback(()=>{
-    generation.current++;clearTimer();itemRef.current=null;remaining.current=0;
-    setPlaying(false);setPaused(false);setHasSequence(false);setStepIndex(-1);setStepNotes([]);setStepLabel([]);
+    generation.current++;clearTimer();noteHandles.current.forEach(h=>{try{h.stop()}catch{}});noteHandles.current=[];itemRef.current=null;remaining.current=0;
+    setPlaying(false);setPaused(false);setHasSequence(false);setStepIndex(-1);setStepNotes([]);setStepLabel('');
     void resumeAudio();
   },[]);
 
@@ -32,8 +32,8 @@ export default function usePlayback() {
       if(token!==generation.current||!itemRef.current)return;
       const item=itemRef.current;const next=indexRef.current+1;
       if(next>=item.steps.length){
-        if(item.loop){indexRef.current=0;runStep(token,0);}
-        else{itemRef.current=null;setPlaying(false);setPaused(false);setHasSequence(false);setStepIndex(-1);setStepNotes([]);setStepLabel('');callbacks.current.onFinish();}
+        if(item.loop){noteHandles.current=[];indexRef.current=0;runStep(token,0);}
+        else{noteHandles.current=[];itemRef.current=null;setPlaying(false);setPaused(false);setHasSequence(false);setStepIndex(-1);setStepNotes([]);setStepLabel('');callbacks.current.onFinish();}
         return;
       }
       indexRef.current=next;runStep(token,next);
@@ -43,7 +43,7 @@ export default function usePlayback() {
   const runStep=(token:number,index:number)=>{
     const item=itemRef.current;if(!item||token!==generation.current)return;
     const step=item.steps[index];const beat=60000/(item.bpm||90);const duration=Math.max(.28,step.beats*beat/1000*.88);
-    step.notes.forEach(n=>playNote(n,{duration,velocity:callbacks.current.velocity/1}));
+    step.notes.forEach(n=>noteHandles.current.push(playNote(n,{duration,velocity:callbacks.current.velocity})));
     setStepIndex(index);setStepNotes(step.notes);setStepLabel(step.label||'');
     callbacks.current.onStep(step.notes,step.lh??[],step.rh??step.notes);
     scheduleNext(token,step.beats*beat);

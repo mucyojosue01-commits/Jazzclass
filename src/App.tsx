@@ -311,7 +311,7 @@ export default function App() {
         {!data.length && tab !== 'tips' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
       </section>
 
-      <aside className="lesson-detail">
+      {tab!=='theory' && <aside className="lesson-detail">
         <div className="detail-kicker">LESSON DETAILS</div>
         {current ? <>
           <h2>{current.title}</h2><span className="detail-sub">{current.sub || current.category}</span>

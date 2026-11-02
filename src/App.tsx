@@ -227,7 +227,7 @@ export default function App() {
           const rh = isProgression ? s.rh.map(midi) : (tab === 'runs' ? [] : s.rh.map(midi));
           return { notes: [...lh, ...rh], lh, rh, beats: s.beats ?? 2, label: s.name };
         })
-      : (tab === 'runs' ? item.lh : item.rh).map(n => ({ notes: [midi(n)], lh: [], rh: [midi(n)], beats: 0.5, label: n }));
+      : tab === 'chords'\n        ? [{ notes: [...item.lh, ...item.rh].map(midi), lh: item.lh.map(midi), rh: item.rh.map(midi), beats: 2, label: item.title }]\n        : (tab === 'runs' ? item.lh : item.rh).map(n => ({ notes: [midi(n)], lh: [], rh: [midi(n)], beats: 0.5, label: n }));
     const playable = { id: item.id, title: item.title, sub: item.sub ?? '', bpm: tempo, loop, steps: sourceSteps };
     if(isProgression) setPersonalData(old=>recordPractice(old,item.id,false));
     await unlockAudio();
@@ -254,7 +254,7 @@ export default function App() {
   };
 
   const handleStep = async (item: Lesson, index: number) => {
-    const step=item.steps?.[index]; if(!step)return; stopPlayback(); setSelection(item); await unlockAudio();
+    const step=item.steps?.[index]; if(!step)return; stopPlayback(); setSelection(item); setPlayedNotes([]); await unlockAudio();
     const lh = tab === 'progressions' ? step.lh.map(midi) : [];
     const rh = tab === 'progressions' ? step.rh.map(midi) : (tab === 'runs' ? [] : step.rh.map(midi));
     const notes = [...lh, ...rh];
@@ -274,7 +274,7 @@ export default function App() {
   const active = playing && stepNotes.length ? stepNotes : liveNotes;
   const activeLeft = leftLiveNotes;
   const activeRight = rightLiveNotes;
-  const current = (selection ? data.find(item => item.id === selection.id) : undefined) ?? data[0] ?? null;
+  const current = selection ? (data.find(item => item.id === selection.id) ?? null) : null;
   const header = descriptions[tab];
   const toggleFavorite=(id:string)=>setPersonalData(old=>{const favorites={...old.favorites};if(Object.prototype.hasOwnProperty.call(favorites,id))delete favorites[id];else favorites[id]=['folder-default'];return {...old,favorites};});
   const openProgression=(id:string)=>{const record=dbProgressions.find(item=>item.slug===id);if(!record)return;setTab('progressions');setGenre(record.style);const steps=realizeProgression(record.steps,{key:progressionKey,style:record.style,leftShape:progressionLeftShape,hands:progressionHands,inversion:progressionInversion,inversionMode:progressionInversionMode,leftOctave:progressionLeftOctave,rightOctave:progressionRightOctave,slashEnabled});const first=steps[0];setSelection({id:record.slug,title:record.title,category:record.style,sub:record.roman_numerals.join(' · '),description:record.description,feel:record.description,lh:first?.lh??[],rh:first?.rh??[],steps,tip:'Key: '+progressionKey+'. Difficulty '+record.difficulty+'/5 · suggested tempo '+record.tempo_min+'–'+record.tempo_max+' BPM.',bpm:record.tempo_min});};
@@ -293,7 +293,7 @@ export default function App() {
     </section>
 
     <TabBar tabs={TABS as readonly {id:string;label:string}[]} active={tab} onChange={(id) => {
-      stopPlayback(); setTab(id as Tab); setSelection(null); setQuery('');
+      stopPlayback(); setTab(id as Tab); setSelection(null); setPlayedNotes([]); setQuery('');
     }} />
 
     {tab==='my-stuff' ? <MyStuff items={dbProgressions.map(item=>({id:item.slug,title:item.title,category:item.style}))} value={personalData} onChange={setPersonalData} onOpen={openProgression} syncStatus={syncStatus} userEmail={accountEmail} onAuthChange={()=>{void supabase?.auth.getUser().then(({data})=>setAccountEmail(data.user?.email??null));}}/> : <main className="studio-main">

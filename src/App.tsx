@@ -11,7 +11,7 @@ import usePlayback from './hooks/usePlayback';
 import TheoryLab from './components/TheoryLab';
 import KnowledgeLibrary from './components/KnowledgeLibrary';
 import MyStuff from './components/MyStuff';
-import { loadPersonalStudyData, savePersonalStudyData, normalizeStudyData, recordPractice, type PersonalStudyData } from './lib/studyTracker';
+import { loadPersonalStudyData, savePersonalStudyData, normalizeStudyData, recordPractice, addToStudy, type PersonalStudyData } from './lib/studyTracker';
 import { supabase } from './lib/supabaseClient';
 
 const TABS = [
@@ -314,7 +314,7 @@ export default function App() {
         {tab === 'progressions' && <div className="catalog-status">{progressionsLoading ? 'Loading 100 professional progressions from JazzClass database…' : progressionsError ? 'Database: '+progressionsError : dbProgressions.length+' progressions loaded · '+progressionKey+' major reference key'}</div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
         {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
-          <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} favorite={Boolean(personalData.favorites[item.id]!==undefined)} onToggleFavorite={tab==='progressions'?()=>toggleFavorite(item.id):undefined} />)}</div>}
+          <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} favorite={Boolean(personalData.favorites[item.id]!==undefined)} onToggleFavorite={tab==='progressions'?()=>toggleFavorite(item.id):undefined} inStudy={Boolean(personalData.progress[item.id])} onAddToStudy={tab==='progressions'?()=>setPersonalData(old=>addToStudy(old,item.id)):undefined} />)}</div>}
         {!data.length && tab !== 'tips' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
       </section>
 

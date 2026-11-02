@@ -2,6 +2,8 @@
 let ctx:AudioContext|null=null,master:GainNode|null=null;
 const NOOP={stop(){}};
 function getCtx():AudioContext|null{if(typeof window==='undefined')return null;if(!ctx){const AC=window.AudioContext||((window as any).webkitAudioContext as typeof AudioContext|undefined);if(!AC)return null;ctx=new AC();master=ctx.createGain();master.gain.value=.75;const comp=ctx.createDynamicsCompressor();comp.threshold.value=-20;comp.knee.value=26;comp.ratio.value=5;comp.attack.value=.004;comp.release.value=.28;master.connect(comp);comp.connect(ctx.destination);}return ctx;}
+export function suspendAudio():Promise<void>{const ac=getCtx();return ac&&ac.state==='running'?ac.suspend().catch(()=>{}):Promise.resolve();}
+export function resumeAudio():Promise<void>{const ac=getCtx();return ac&&ac.state==='suspended'?ac.resume().catch(()=>{}):Promise.resolve();}
 export function unlockAudio():Promise<void>{const ac=getCtx();if(!ac||ac.state!=='suspended')return Promise.resolve();return ac.resume().catch(()=>{});}
 export function midiToFreq(midi:number):number{return 440*Math.pow(2,(midi-69)/12);}
 const PARTIALS=[{ratio:1,gain:.6,type:'sine' as OscillatorType,detune:0},{ratio:1,gain:.26,type:'triangle' as OscillatorType,detune:5},{ratio:2,gain:.22,type:'sine' as OscillatorType,detune:-2},{ratio:3,gain:.09,type:'sine' as OscillatorType,detune:3},{ratio:4,gain:.05,type:'sine' as OscillatorType,detune:-3},{ratio:5.4,gain:.018,type:'sine' as OscillatorType,detune:0}];

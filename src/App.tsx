@@ -281,7 +281,7 @@ export default function App() {
     window.setTimeout(() => setLiveNotes(old => old.filter(n => n !== m)), 900);
   };
 
-  const active = playing && stepNotes.length ? stepNotes : liveNotes;
+  const active = (playing || paused) && stepNotes.length ? stepNotes : liveNotes;
   const activeLeft = leftLiveNotes;
   const activeRight = rightLiveNotes;
   const current = selection ? (data.find(item => item.id === selection.id) ?? null) : null;
@@ -329,7 +329,7 @@ export default function App() {
           {tab === 'progressions' ? <><div className="hand-card left-hand"><b>LEFT HAND · GREEN · BASS / SLASH NOTE</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Green markers · left hand</small></div><div className="hand-card green-hand"><b>RIGHT HAND · YELLOW · CHORD VOICING</b><p>{current.rh.join('  ·  ') || '—'}</p><small>Yellow markers · right-hand chord tones</small></div></> : tab === 'runs' ? <div className="hand-card left-hand"><b>LEFT HAND</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Left-hand notes · green markers</small></div> : <div className="hand-card right-hand"><b>RIGHT HAND</b><p>{current.rh.join('  ·  ') || current.notes?.join(' · ') || '—'}</p><small>Scale and chord notes · yellow markers</small></div>}
           {current.steps?.length ? <div className="step-list"><b>CHORD-BY-CHORD MOVEMENT</b>{current.steps.map((step, i) => <button type="button" className={'step-row ' + (stepIndex === i ? 'step-active' : '')} key={step.name} onClick={() => void handleStep(current, i)}><span>{String(i + 1).padStart(2, '0')} · {step.name}</span><small>{tab === 'progressions' ? 'LH '+step.lh.join(' + ')+'  ·  RH '+step.rh.join(' + ') : 'RH ' + step.rh.join(' + ')}</small><em>▶</em></button>)}</div> : null}
           <div className="playing-tip"><b>PLAYING TIP</b><p>{current.tip}</p>{current.target && <small>Suggested destination: {current.target}</small>}</div>
-          <div className="detail-actions"><button className="play-primary" onClick={() => void handlePlay(current)}>{playing && selection?.id === current.id ? 'Ⅱ PAUSE / STOP' : '▶ PLAY LESSON'}</button><button className="stop-button" onClick={stopPlayback}>■ Stop</button></div>
+          <div className="detail-actions"><button className="play-primary" onClick={() => void handlePlay(current)}>{paused && selection?.id === current.id ? '▶ RESUME LESSON' : playing && selection?.id === current.id ? 'Ⅱ PAUSE LESSON' : '▶ PLAY LESSON'}</button>{hasSequence && <button className="stop-button" onClick={stopPlayback}>■ Stop</button>}</div>
         </> : <div className="empty-state">Choose a lesson to see its notes, hand position and practice advice.</div>}
       </aside>}
     </main>}

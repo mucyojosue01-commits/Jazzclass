@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState} from 'react';
 import {supabase} from '../lib/supabaseClient';
-import {KEY_OPTIONS,CHORD_TYPES,SCALE_TYPES,PROGRESSION_TEMPLATES,makeScale,makeChord,makeArpeggio,invertChord,realizeProgression,midiName} from '../musicTheory';
+import {KEY_OPTIONS,CHORD_TYPES,SCALE_TYPES,PROGRESSION_TEMPLATES,makeScale,makeChord,makeArpeggio,makeVoicing,makeSlashChord,makeScaleHarmony,makeLick,LICK_TEMPLATES,invertChord,realizeProgression,midiName} from '../musicTheory';
 type Course={id:string;slug:string;title:string;description:string;level:string;style:string|null;sort_order:number};
 type Lesson={id:string;slug:string;title:string;category:string;level:string;objectives:string[];summary:string;estimated_minutes:number|null;course_id:string;sort_order:number};
 type Section={id:string;section_index:number;heading:string;body:string;example_data:Record<string,unknown>};

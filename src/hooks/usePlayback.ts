@@ -1,24 +1,70 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playNote, suspendAudio, resumeAudio } from '../lib/pianoAudio';
-type Step = { notes:number[]; lh?:number[]; rh?:number[]; beats:number; label?:string };
-type Item = { id:string; title:string; sub?:string; bpm:number; loop:boolean; steps:Step[] };
-export default function usePlayback(){
- const [playing,setPlaying]=useState(false),[paused,setPaused]=useState(false),[stepIndex,setStepIndex]=useState(-1),[stepNotes,setStepNotes]=useState<number[]>([]),[stepLabel,setStepLabel]=useState('');
- const timers=useRef<number[]>([]),handles=useRef<{stop:()=>void}[]>([]),generation=useRef(0),itemRef=useRef<Item|null>(null),callbacks=useRef<{onStep:(n:number[],l:number[],r:number[])=>void;onFinish:()=>void;velocity:number}|null>(null),index=useRef(0);
- const clear=()=>{timers.current.forEach(window.clearTimeout);timers.current=[];};
- const stop=useCallback(()=>{generation.current++;clear();handles.current.forEach(h=>{try{h.stop()}catch{}});handles.current=[];itemRef.current=null;callbacks.current=null;index.current=0;setPlaying(false);setPaused(false);setStepIndex(-1);setStepNotes([]);setStepLabel('');void resumeAudio();},[]);
- const schedule=useCallback((token:number)=>{
-  const item=itemRef.current,cb=callbacks.current;if(!item||!cb||token!==generation.current)return;
-  if(index.current>=item.steps.length){if(item.loop)index.current=0;else{setPlaying(false);setPaused(false);setStepIndex(-1);setStepNotes([]);setStepLabel('');cb.onFinish();handles.current=[];itemRef.current=null;callbacks.current=null;return;}}
-  const i=index.current,step=item.steps[i],beat=60/(item.bpm||90),duration=Math.max(.28,step.beats*beat*.88);
-  handles.current.forEach(h=>{try{h.stop()}catch{}});handles.current=[];
-  step.notes.forEach(n=>handles.current.push(playNote(n,{duration,velocity:cb.velocity})));
-  setStepIndex(i);setStepNotes(step.notes);setStepLabel(step.label||'');cb.onStep(step.notes,step.lh??[],step.rh??step.notes);
-  timers.current.push(window.setTimeout(()=>{if(token!==generation.current||!itemRef.current)return;index.current=i+1;schedule(token);},Math.max(.28,step.beats*beat)*1000));
- },[]);
- const play=useCallback((item:Item,onStep:(n:number[],l:number[],r:number[])=>void,onFinish:()=>void,velocity=.5)=>{stop();const token=generation.current;itemRef.current=item;callbacks.current={onStep,onFinish,velocity};index.current=0;setPlaying(true);setPaused(false);schedule(token);},[stop,schedule]);
- const pause=useCallback(()=>{if(!itemRef.current||!playing||paused)return;clear();setPaused(true);void suspendAudio();},[playing,paused]);
- const resume=useCallback(()=>{if(!itemRef.current||!paused)return;void resumeAudio().then(()=>{setPaused(false);const token=generation.current,item=itemRef.current;if(!item)return;const step=item.steps[index.current],wait=step?Math.max(.28,step.beats*60/(item.bpm||90)):0;timers.current.push(window.setTimeout(()=>{if(token!==generation.current)return;index.current++;schedule(token);},wait*1000));});},[paused,schedule]);
- useEffect(()=>()=>{generation.current++;clear();handles.current.forEach(h=>{try{h.stop()}catch{}});},[]);
- return {playing,paused,stepIndex,stepNotes,stepLabel,play,stop,pause,resume};
+
+type Step = { notes: number[]; lh?: number[]; rh?: number[]; beats: number; label?: string };
+type Item = { id: string; title: string; sub?: string; bpm: number; loop: boolean; steps: Step[] };
+export default function usePlayback() {
+  const [playing,setPlaying]=useState(false);
+  const [paused,setPaused]=useState(false);
+  const [hasSequence,setHasSequence]=useState(false);
+  const [stepIndex,setStepIndex]=useState(-1);
+  const [stepNotes,setStepNotes]=useState<number[]>([]);
+  const [stepLabel,setStepLabel]=useState('');
+  const timer=useRef<number|null>(null);
+  const deadline=useRef(0);
+  const remaining=useRef(0);
+  const generation=useRef(0);
+  const itemRef=useRef<Item|null>(null);
+  const callbacks=useRef<{onStep:(notes:number[],lh:number[],rh:number[])=>void;onFinish:()=>void;velocity:number}>({onStep:()=>{},onFinish:()=>{},velocity:.5});
+  const indexRef=useRef(0);
+
+  const clearTimer=()=>{if(timer.current!==null){window.clearTimeout(timer.current);timer.current=null;}};
+  const stop=useCallback(()=>{
+    generation.current++;clearTimer();itemRef.current=null;remaining.current=0;
+    setPlaying(false);setPaused(false);setHasSequence(false);setStepIndex(-1);setStepNotes([]);setStepLabel([]);
+    void resumeAudio();
+  },[]);
+
+  const scheduleNext=useCallback((token:number,delay:number)=>{
+    clearTimer();remaining.current=delay;deadline.current=performance.now()+delay;
+    timer.current=window.setTimeout(()=>{
+      timer.current=null;
+      if(token!==generation.current||!itemRef.current)return;
+      const item=itemRef.current;const next=indexRef.current+1;
+      if(next>=item.steps.length){
+        if(item.loop){indexRef.current=0;runStep(token,0);}
+        else{itemRef.current=null;setPlaying(false);setPaused(false);setHasSequence(false);setStepIndex(-1);setStepNotes([]);setStepLabel('');callbacks.current.onFinish();}
+        return;
+      }
+      indexRef.current=next;runStep(token,next);
+    },Math.max(0,delay));
+  },[]);
+
+  const runStep=(token:number,index:number)=>{
+    const item=itemRef.current;if(!item||token!==generation.current)return;
+    const step=item.steps[index];const beat=60000/(item.bpm||90);const duration=Math.max(.28,step.beats*beat/1000*.88);
+    step.notes.forEach(n=>playNote(n,{duration,velocity:callbacks.current.velocity/1}));
+    setStepIndex(index);setStepNotes(step.notes);setStepLabel(step.label||'');
+    callbacks.current.onStep(step.notes,step.lh??[],step.rh??step.notes);
+    scheduleNext(token,step.beats*beat);
+  };
+
+  const play=useCallback((item:Item,onStep:(notes:number[],lh:number[],rh:number[])=>void,onFinish:()=>void,velocity=.5)=>{
+    stop();const token=generation.current;itemRef.current=item;callbacks.current={onStep,onFinish,velocity};indexRef.current=0;
+    setHasSequence(true);setPlaying(true);setPaused(false);runStep(token,0);
+  },[stop]);
+
+  const pause=useCallback(async()=>{
+    if(!itemRef.current||!playing)return;
+    remaining.current=Math.max(0,deadline.current-performance.now());clearTimer();
+    await suspendAudio();setPlaying(false);setPaused(true);
+  },[playing]);
+  const resume=useCallback(async()=>{
+    if(!itemRef.current||!paused)return;
+    await resumeAudio();setPaused(false);setPlaying(true);
+    scheduleNext(generation.current,remaining.current);
+  },[paused,scheduleNext]);
+
+  useEffect(()=>()=>{generation.current++;clearTimer();void resumeAudio();},[]);
+  return {playing,paused,hasSequence,stepIndex,stepNotes,stepLabel,play,stop,pause,resume};
 }

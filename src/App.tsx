@@ -13,6 +13,7 @@ import KnowledgeLibrary from './components/KnowledgeLibrary';
 import MyStuff from './components/MyStuff';
 import { loadPersonalStudyData, savePersonalStudyData, normalizeStudyData, recordPractice, addToStudy, type PersonalStudyData } from './lib/studyTracker';
 import { supabase } from './lib/supabaseClient';
+import { makePassingLessons, passingCategories } from './passingChords';
 
 const TABS = [
   { id: 'theory', label: 'Theory Lab' },
@@ -20,6 +21,7 @@ const TABS = [
   { id: 'scales', label: 'Scales' },
   { id: 'chords', label: 'Chords & Harmony' },
   { id: 'progressions', label: 'Progressions' },
+  { id: 'passing', label: 'Passing Chords' },
   { id: 'my-stuff', label: 'My Stuff' },
   { id: 'arpeggios', label: 'Arpeggios' },
   { id: 'runs', label: 'Runs' },
@@ -41,6 +43,7 @@ const descriptions: Record<Tab, { title: string; copy: string }> = {
   scales: { title: 'Scales in F♯', copy: 'Major, minor, modes, pentatonics and blues. Play every scale in a clean, ascending register.' },
   chords: { title: 'Chords & harmony', copy: 'Explore F♯ chord voicings, harmonised scale families and the sound of each chord quality.' },
   progressions: { title: 'Progressions', copy: 'Explore jazz, blues, funk, worship and praise progressions, with authored chord voicings, inversions and configurable two-hand arrangements.' },
+  passing: { title: 'Passing chords', copy: 'Study 30 distinct harmonic pathways. Hear where each idea starts, the passing chord or chords in the middle, and the destination — separately or as one connected movement.' },
   arpeggios: { title: 'Arpeggios', copy: 'Hear chord tones one at a time, moving smoothly up and back down.' },
   runs: { title: 'Runs & licks', copy: 'Short musical connectors, chord-tone phrases and tasteful fills. Left-hand examples only.' },
   tips: { title: 'Practice notes', copy: 'Practical advice for touch, timing, harmony and developing a musical feel.' },
@@ -73,6 +76,7 @@ export default function App() {
   const [slashEnabled, setSlashEnabled] = useState(false);
   const [genre, setGenre] = useState('All');
   const [progressionKey, setProgressionKey] = useState('F♯');
+  const [passingCategory, setPassingCategory] = useState('All');
   const [dbProgressions, setDbProgressions] = useState<ProgressionRecord[]>([]);
   const [progressionsLoading, setProgressionsLoading] = useState(true);
   const [progressionsError, setProgressionsError] = useState('');
@@ -166,6 +170,7 @@ export default function App() {
       return {...s,id:s.id+'-harm-'+scaleQuality,title:s.title+' · '+scaleQuality.toUpperCase()+' harmony',category:'Scale harmony · '+scaleQuality,description:'Each scale degree is voiced as a '+scaleQuality+' chord. All right-hand chord tones sound simultaneously.',lh:[],rh:steps[0].rh,steps,notes:steps.map(x=>x.name)};
     });
     if (tab === 'chords') items = [...chords, ...harmonies, ...(showFamilies ? chordScales : [])];
+    if (tab === 'passing') items = makePassingLessons((['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'].indexOf(progressionKey)+12)%12).filter(item => passingCategory === 'All' || item.category === passingCategory);
     if (tab === 'progressions') {
       const records = dbProgressions.filter(item => genre === 'All' || item.style === genre);
       items = records.map(item => {
@@ -188,7 +193,7 @@ export default function App() {
     if (tab === 'runs') items = runs;
     const q = query.trim().toLowerCase();
     return q ? items.filter(x => [x.title, x.sub, x.category, x.feel, x.tip].join(' ').toLowerCase().includes(q)) : items;
-  }, [tab, query, showFamilies, scalePlayMode, scaleQuality, progressionLeftShape, progressionHands, progressionLeftOctave, progressionRightOctave, progressionInversion, progressionInversionMode, slashEnabled, genre, progressionKey, dbProgressions]);
+  }, [tab, query, showFamilies, scalePlayMode, scaleQuality, progressionLeftShape, progressionHands, progressionLeftOctave, progressionRightOctave, progressionInversion, progressionInversionMode, slashEnabled, genre, progressionKey, dbProgressions, passingCategory]);
 
   useEffect(() => {
     if (!metronome) return;
@@ -227,7 +232,7 @@ export default function App() {
     const isProgression = tab === 'progressions';
     const sourceSteps = item.steps?.length
       ? item.steps.map(s => {
-          const lh = [...new Set((isProgression || tab === 'chords') ? s.lh.map(midi) : [])];
+          const lh = [...new Set((isProgression || tab === 'chords' || tab === 'passing') ? s.lh.map(midi) : [])];
           const rh = [...new Set((tab === 'runs' ? [] : s.rh.map(midi)).filter(n => !lh.includes(n)))];
           return { notes: [...lh, ...rh], lh, rh, beats: s.beats ?? 2, label: s.name };
         })
@@ -262,7 +267,7 @@ export default function App() {
 
   const handleStep = async (item: Lesson, index: number) => {
     const step=item.steps?.[index]; if(!step)return; stopPlayback(); setSelection(item); setPlayedNotes([]); await unlockAudio();
-    const lh = [...new Set((tab === 'progressions' || tab === 'chords') ? step.lh.map(midi) : [])];
+    const lh = [...new Set((tab === 'progressions' || tab === 'chords' || tab === 'passing') ? step.lh.map(midi) : [])];
     const rh = [...new Set((tab === 'runs' ? [] : step.rh.map(midi)).filter(n=>!lh.includes(n)))];
     const notes = [...lh, ...rh];
     play({id:item.id+'-step-'+index,title:item.title,sub:step.name,bpm:tempo,loop:false,steps:[{notes,lh,rh,beats:2,label:step.name}]},(all,left,right)=>{setLiveNotes(all);setLeftLiveNotes(left);setRightLiveNotes(right);},()=>{setLiveNotes([]);setLeftLiveNotes([]);setRightLiveNotes([]);},velocity/100*volume/100);
@@ -311,6 +316,7 @@ export default function App() {
         </div>}
         {tab === 'scales' && <div className="arrangement-panel"><div className="family-switch"><button className={scalePlayMode==='single'?'selected':''} onClick={()=>setScalePlayMode('single')}>Single notes</button><button className={scalePlayMode==='harmony'?'selected':''} onClick={()=>setScalePlayMode('harmony')}>Chords / harmonies</button></div>{scalePlayMode==='harmony' && <label className="setting-field">CHORD TYPE<select value={scaleQuality} onChange={e=>setScaleQuality(e.target.value as typeof scaleQuality)}><option value="major">Major</option><option value="minor">Minor</option><option value="diminished">Diminished</option><option value="augmented">Augmented</option><option value="sus2">Suspended 2</option><option value="sus4">Suspended 4</option></select></label>}</div>}
         {tab === 'progressions' && <div className="arrangement-panel progression-settings"><label className="setting-field">KEY<select value={progressionKey} onChange={e=>{setProgressionKey(e.target.value);resetProgressionPreview();}}>{['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'].map(k=><option key={k}>{k}</option>)}</select></label><label className="setting-field">HANDS TO PLAY<select value={progressionHands} onChange={e=>{setProgressionHands(e.target.value as 'right'|'left'|'both');resetProgressionPreview();}}><option value="right">Right hand only</option><option value="left">Left hand only</option><option value="both">Both hands</option></select></label><label className="setting-field">LEFT-HAND FINGERING<select value={progressionLeftShape} onChange={e=>{setProgressionLeftShape(e.target.value as 'two'|'three');resetProgressionPreview();}}><option value="two">2 notes · root + fifth</option><option value="three">3 notes · root + fifth + octave</option></select></label><label className="setting-field">RIGHT-HAND INVERSION<select value={progressionInversion} onChange={e=>{setProgressionInversion(+e.target.value);resetProgressionPreview();}}><option value={0}>Root position</option><option value={1}>1st inversion</option><option value={2}>2nd inversion</option><option value={3}>3rd inversion</option></select></label><label className="setting-field">APPLY INVERSIONS TO<select value={progressionInversionMode} onChange={e=>{setProgressionInversionMode(e.target.value as 'right'|'both');resetProgressionPreview();}}><option value="right">Right hand only</option><option value="both">Both hands</option></select></label><label className="setting-toggle"><input type="checkbox" checked={progressionLeftOctave} onChange={e=>{setProgressionLeftOctave(e.target.checked);resetProgressionPreview();}}/> Add lower octave to left hand</label><label className="setting-toggle"><input type="checkbox" checked={progressionRightOctave} onChange={e=>{setProgressionRightOctave(e.target.checked);resetProgressionPreview();}}/> Add upper octave to right hand</label><label className="setting-toggle"><input type="checkbox" checked={slashEnabled} onChange={e=>{setSlashEnabled(e.target.checked);resetProgressionPreview();}}/> Enable slash-chord bass movement</label><label className="setting-field">STYLE<select value={genre} onChange={e=>{setGenre(e.target.value);resetProgressionPreview();}}>{['All','Jazz','Blues','Funk','Worship','Praise','Gospel','Pop'].map(g=><option key={g}>{g}</option>)}</select></label></div>}
+        {tab === 'passing' && <div className="arrangement-panel passing-settings"><label className="setting-field">KEY<select value={progressionKey} onChange={e=>{setProgressionKey(e.target.value);stopPlayback();setSelection(null);}}>{['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'].map(k=><option key={k}>{k}</option>)}</select></label><label className="setting-field">CATEGORY<select value={passingCategory} onChange={e=>{setPassingCategory(e.target.value);stopPlayback();setSelection(null);}}><option>All</option>{passingCategories.map(c=><option key={c}>{c}</option>)}</select></label><span className="catalog-status">30 original pathways · {passingCategories.length} technique families · transposable to all 12 keys</span></div>}
         {tab === 'progressions' && <div className="catalog-status">{progressionsLoading ? 'Loading 100 professional progressions from JazzClass database…' : progressionsError ? 'Database: '+progressionsError : dbProgressions.length+' progressions loaded · '+progressionKey+' major reference key'}</div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
         {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
@@ -323,10 +329,10 @@ export default function App() {
         {current ? <>
           <h2>{current.title}</h2><span className="detail-sub">{current.sub || current.category}</span>
           <p className="detail-copy">{current.feel ?? current.description}</p>
-          {tab === 'progressions' ? <><div className="hand-card left-hand"><b>LEFT HAND · GREEN · BASS / SLASH NOTE</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Green markers · left hand</small></div><div className="hand-card green-hand"><b>RIGHT HAND · YELLOW · CHORD VOICING</b><p>{current.rh.join('  ·  ') || '—'}</p><small>Yellow markers · right-hand chord tones</small></div></> : tab === 'runs' ? <div className="hand-card left-hand"><b>LEFT HAND</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Left-hand notes · green markers</small></div> : <div className="hand-card right-hand"><b>RIGHT HAND</b><p>{current.rh.join('  ·  ') || current.notes?.join(' · ') || '—'}</p><small>Scale and chord notes · yellow markers</small></div>}
-          {current.steps?.length ? <div className="step-list"><b>CHORD-BY-CHORD MOVEMENT</b>{current.steps.map((step, i) => <button type="button" className={'step-row ' + (stepIndex === i ? 'step-active' : '')} key={step.name} onClick={() => void handleStep(current, i)}><span>{String(i + 1).padStart(2, '0')} · {step.name}</span><small>{tab === 'progressions' ? 'LH '+step.lh.join(' + ')+'  ·  RH '+step.rh.join(' + ') : 'RH ' + step.rh.join(' + ')}</small><em>▶</em></button>)}</div> : null}
+          {tab === 'passing' ? <><div className="passing-route"><div className="passing-route-node"><small>STARTING CHORD</small><b>{current.steps?.[0]?.name}</b><span>{[...(current.steps?.[0]?.lh??[]),...(current.steps?.[0]?.rh??[])].join(' · ')}</span></div><div className="passing-route-arrow">↓</div>{current.steps?.slice(1,-1).map((step,i)=><div className="passing-route-node passing-middle" key={step.name}><small>PASSING CHORD {i+1}</small><b>{step.name}</b><span>{[...step.lh,...step.rh].join(' · ')}</span><button type="button" onClick={()=>void handleStep(current,i+1)}>▶ Play this chord</button></div>)}<div className="passing-route-arrow">↓</div><div className="passing-route-node passing-destination"><small>DESTINATION CHORD</small><b>{current.target}</b><span>{[...(current.steps?.at(-1)?.lh??[]),...(current.steps?.at(-1)?.rh??[])].join(' · ')}</span></div></div><div className="detail-actions"><button className="play-primary" onClick={()=>void handleStep(current,0)}>▶ Play starting chord</button><button className="stop-button" onClick={()=>void handleStep(current,(current.steps?.length??1)-1)}>▶ Play destination</button></div></> : tab === 'progressions' ? <><div className="hand-card left-hand"><b>LEFT HAND · GREEN · BASS / SLASH NOTE</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Green markers · left hand</small></div><div className="hand-card green-hand"><b>RIGHT HAND · YELLOW · CHORD VOICING</b><p>{current.rh.join('  ·  ') || '—'}</p><small>Yellow markers · right-hand chord tones</small></div></> : tab === 'runs' ? <div className="hand-card left-hand"><b>LEFT HAND</b><p>{current.lh.join('  ·  ') || '—'}</p><small>Left-hand notes · green markers</small></div> : <div className="hand-card right-hand"><b>RIGHT HAND</b><p>{current.rh.join('  ·  ') || current.notes?.join(' · ') || '—'}</p><small>Scale and chord notes · yellow markers</small></div>}
+          {current.steps?.length && tab !== 'passing' ? <div className="step-list"><b>CHORD-BY-CHORD MOVEMENT</b>{current.steps.map((step, i) => <button type="button" className={'step-row ' + (stepIndex === i ? 'step-active' : '')} key={step.name} onClick={() => void handleStep(current, i)}><span>{String(i + 1).padStart(2, '0')} · {step.name}</span><small>{tab === 'progressions' ? 'LH '+step.lh.join(' + ')+'  ·  RH '+step.rh.join(' + ') : 'RH ' + step.rh.join(' + ')}</small><em>▶</em></button>)}</div> : null}
           <div className="playing-tip"><b>PLAYING TIP</b><p>{current.tip}</p>{current.target && <small>Suggested destination: {current.target}</small>}</div>
-          <div className="detail-actions"><button className="play-primary" onClick={() => void handlePlay(current)}>{paused && selection?.id === current.id ? '▶ RESUME LESSON' : playing && selection?.id === current.id ? 'Ⅱ PAUSE LESSON' : '▶ PLAY LESSON'}</button>{hasSequence && <button className="stop-button" onClick={stopPlayback}>■ Stop</button>}</div>
+          <div className="detail-actions"><button className="play-primary" onClick={() => void handlePlay(current)}>{paused && selection?.id === current.id ? '▶ RESUME LESSON' : playing && selection?.id === current.id ? 'Ⅱ PAUSE LESSON' : tab === 'passing' ? '▶ PLAY COMPLETE MOVEMENT' : '▶ PLAY LESSON'}</button>{hasSequence && <button className="stop-button" onClick={stopPlayback}>■ Stop</button>}</div>
         </> : <div className="empty-state">Choose a lesson to see its notes, hand position and practice advice.</div>}
       </aside>}
     </main>}

@@ -11,13 +11,38 @@ type Step={notes:number[];left:number[];right:number[];label:string;beats?:numbe
 type Props={onPlay:(notes:number[],left:number[],right:number[],title:string,sequence?:Step[])=>void};
 const STORE='jazzclass-theory-progress-v1';
 const label=(s:string)=>s.charAt(0).toUpperCase()+s.slice(1);
-function demo(lesson:Lesson,root:number){
- const major=SCALE_TYPES[0],minor=SCALE_TYPES.find(s=>s.id==='natural_minor')!,triad=CHORD_TYPES[0],seventh=CHORD_TYPES.find(c=>c.id==='major7')!;
- if(['major-scale-formula','keyboard-geography','minor-scale-families','modes-and-modal-colour','pentatonic-and-blues','bebop-and-altered-scales','altered-dominants'].includes(lesson.slug)){const ns=makeScale(root,lesson.slug==='minor-scale-families'?minor:major,4);return{notes:ns,left:[],right:ns,steps:ns.map(n=>({notes:[n],left:[],right:[n],label:midiName(n),beats:.5}))};}
- if(['jazz-two-five-one','gospel-turnarounds','worship-and-praise'].includes(lesson.slug)){const t=PROGRESSION_TEMPLATES.find(x=>x.id===(lesson.slug==='jazz-two-five-one'?'jazz251':lesson.slug==='gospel-turnarounds'?'gospel':'worship'))!;const ps=realizeProgression(root,t,2,0);return{notes:ps.flatMap(p=>[...p.left,...p.right]),left:[],right:[],steps:ps.map(p=>({notes:[...p.left,...p.right],left:p.left,right:p.right,label:p.name,beats:2}))};}
- if(lesson.slug==='chord-arpeggios'){const ns=makeArpeggio(root,seventh,3);return{notes:ns,left:[],right:ns,steps:ns.map(n=>({notes:[n],left:[],right:[n],label:midiName(n),beats:.5}))};}
- const ns=makeChord(root,['seventh-chord-families','extended-chords','inversions-versus-voicings'].includes(lesson.slug)?seventh:triad,4);
- const voiced=lesson.slug==='inversions-versus-voicings'?invertChord(ns,1):ns;return{notes:voiced,left:[],right:voiced,steps:undefined as Step[]|undefined};
+type LessonDemo={notes:number[];left:number[];right:number[];steps?:Step[]};
+function demo(lesson:Lesson,root:number):LessonDemo{
+ const scale=(id:string)=>SCALE_TYPES.find(x=>x.id===id)!;
+ const chord=(id:string)=>CHORD_TYPES.find(x=>x.id===id)!;
+ const scaleLessons:Record<string,string>={
+  'major-scale-formula':'major','keyboard-geography':'major','minor-scale-families':'natural_minor',
+  'modes-and-modal-colour':'dorian','pentatonic-and-blues':'blues','bebop-and-altered-scales':'bebop_dominant',
+  'altered-dominants':'altered','blues-shuffle-phrasing':'blues'
+ };
+ if(scaleLessons[lesson.slug]){
+  const ns=makeScale(root,scale(scaleLessons[lesson.slug]),4);
+  return{notes:ns,left:[],right:ns,steps:ns.map(n=>({notes:[n],left:[],right:[n],label:midiName(n),beats:.5}))};
+ }
+ if(['jazz-two-five-one','gospel-turnarounds','worship-and-praise','blues-dominant-harmony','blues-turnarounds'].includes(lesson.slug)){
+  const id=lesson.slug==='jazz-two-five-one'?'jazz251':lesson.slug==='gospel-turnarounds'?'gospel':lesson.slug==='worship-and-praise'?'worship':'blues';
+  const t=PROGRESSION_TEMPLATES.find(x=>x.id===id)!;
+  const ps=realizeProgression(root,t,2,0);
+  return{notes:ps.flatMap(p=>[...p.left,...p.right]),left:ps.flatMap(p=>p.left),right:ps.flatMap(p=>p.right),steps:ps.map(p=>({notes:[...p.left,...p.right],left:p.left,right:p.right,label:p.name,beats:2}))};
+ }
+ if(['pop-broken-chord-patterns','chord-arpeggios'].includes(lesson.slug)){
+  const c=lesson.slug==='chord-arpeggios'?chord('major7'):chord('major');
+  const ns=makeArpeggio(root,c,3,'up_down');
+  return{notes:ns,left:[],right:ns,steps:ns.map(n=>({notes:[n],left:[],right:[n],label:midiName(n),beats:.5}))};
+ }
+ const quality=['funk-chord-stabs'].includes(lesson.slug)?'dominant9':
+  ['funk-vamps-and-arrangement'].includes(lesson.slug)?'dominant13':
+  ['accompaniment-role-and-space','left-hand-bass-and-right-hand-chords','supporting-singers-and-transposition'].includes(lesson.slug)?'major9':
+  ['seventh-chord-families','extended-chords','inversions-versus-voicings'].includes(lesson.slug)?'major7':'major';
+ const rh=makeChord(root,chord(quality),4);
+ const voiced=['inversions-versus-voicings','pop-chord-inversions'].includes(lesson.slug)?invertChord(rh,1):rh;
+ const bass=36+root;const left=[bass,bass+7];
+ return{notes:[...left,...voiced],left,right:voiced};
 }
 export default function TheoryLab({onPlay}:Props){
  const[courses,setCourses]=useState<Course[]>([]),[lessons,setLessons]=useState<Lesson[]>([]);
@@ -39,13 +64,13 @@ export default function TheoryLab({onPlay}:Props){
  const playExample=()=>{if(!lesson)return;const d=demo(lesson,root);onPlay(d.notes,d.left,d.right,lesson.title,d.steps);};
  if(loading)return <section className="theory-academy"><div className="academy-loading">Loading the JazzClass curriculum…</div></section>;
  if(error)return <section className="theory-academy"><div className="academy-error">{error}</div></section>;
- if(lesson){const p=progress[lesson.slug];return <section className="theory-academy">
+ if(lesson){const p=progress[lesson.slug];const lessonDemo=demo(lesson,root);return <section className="theory-academy">
  <div className="academy-topline"><button className="academy-back" onClick={()=>setLesson(null)}>← All courses</button><span>{course?.title} / {lesson.category}</span></div>
  <header className="academy-detail-hero"><div><span className="detail-kicker">LESSON · {label(lesson.level)} · {lesson.estimated_minutes??'—'} MIN</span><h2>{lesson.title}</h2><p>{lesson.summary}</p></div><div className="academy-completion"><strong>{p?.progress_percent??0}%</strong><span>{p?.status==='completed'?'Completed':p?.status==='in_progress'?'In progress':'Not started'}</span></div></header>
  <div className="academy-detail-grid"><article className="academy-lesson-content">
  <section className="academy-block"><span className="academy-eyebrow">LEARNING OBJECTIVES</span><h3>By the end of this lesson</h3><ul className="academy-objectives">{lesson.objectives.map(x=><li key={x}>{x}</li>)}</ul></section>
  {detailLoading?<div className="academy-loading">Loading lesson material…</div>:sections.map(s=><section className="academy-block" key={s.id}><span className="academy-eyebrow">CONCEPT {s.section_index}</span><h3>{s.heading}</h3><p>{s.body}</p>{typeof s.example_data.practice==='string'&&<div className="academy-practice-note"><b>Practice direction</b><span>{s.example_data.practice}</span></div>}</section>)}
- <section className="academy-block academy-example"><div><span className="academy-eyebrow">SMART LEARNING KEYBOARD</span><h3>Explore the sound in {KEY_OPTIONS[root].name}</h3><p>Tap any key to hear its pitch. Play the lesson example to hear the complete idea; change key to transpose the demonstration.</p></div><div className="academy-example-controls"><select value={root} onChange={e=>setRoot(+e.target.value)} aria-label="Transpose lesson example">{KEY_OPTIONS.map(k=><option key={k.pitchClass} value={k.pitchClass}>{k.name}</option>)}</select><button onClick={playExample}>▶ Play lesson example</button></div><div className="academy-keyboard-wrap"><Piano compact onKey={m=>onPlay([m],[],[m],"Keyboard · "+midiName(m))} activeNotes={demo(lesson,root).notes} leftNotes={demo(lesson,root).left} rightNotes={demo(lesson,root).right}/></div><div className="academy-key-legend"><span><i className="left"/> Left hand</span><span><i className="right"/> Right hand</span><span>Tap a key to audition · highlighted notes show the lesson voicing</span></div></section>
+ <section className="academy-block academy-example"><div><span className="academy-eyebrow">SMART LEARNING KEYBOARD</span><h3>Explore the sound in {KEY_OPTIONS[root].name}</h3><p>Tap any key to hear its pitch. Play the lesson example to hear the complete idea; change key to transpose the demonstration.</p></div><div className="academy-example-controls"><select value={root} onChange={e=>setRoot(+e.target.value)} aria-label="Transpose lesson example">{KEY_OPTIONS.map(k=><option key={k.pitchClass} value={k.pitchClass}>{k.name}</option>)}</select><button onClick={playExample}>▶ Play lesson example</button></div><div className="academy-keyboard-wrap"><Piano compact onKey={m=>onPlay([m],[],[m],"Keyboard · "+midiName(m))} activeNotes={lessonDemo.notes} leftNotes={lessonDemo.left} rightNotes={lessonDemo.right}/></div><div className="academy-key-legend"><span><i className="left"/> Left hand</span><span><i className="right"/> Right hand</span><span>Tap any key to audition · highlighted notes show the lesson example</span></div><div className="academy-note-readout"><span>EXAMPLE NOTES</span><div>{lessonDemo.notes.map((n,i)=><b key={n+"-"+i}>{midiName(n)}</b>)}</div></div></section>
  <section className="academy-block"><span className="academy-eyebrow">PRACTICE & APPLICATION</span><h3>Put the concept into your hands</h3>{exercises.length?exercises.map(ex=><div className="academy-exercise" key={ex.id}><b>{ex.title}</b><p>{ex.prompt}</p><ul>{(Array.isArray(ex.answer_data.success_criteria)?ex.answer_data.success_criteria as string[]:[]).map(x=><li key={x}>{x}</li>)}</ul><small>Difficulty {ex.difficulty}/5 · {ex.exercise_type.replace(/_/g,' ')}</small></div>):<div className="academy-exercise"><b>Practice assignment</b><p>Play slowly, listen for accuracy and evenness, then transpose the idea through all twelve keys.</p><ul><li>Play without stopping.</li><li>Listen for clear pitch and rhythm.</li><li>Repeat in a second key.</li></ul></div>}</section>
  <div className="academy-mark-progress"><div><span className="academy-eyebrow">YOUR LEARNING RECORD</span><h3>Lesson progress</h3><p>{saved}</p></div><div className="academy-progress-actions"><button className={p?.status==='in_progress'?'active':''} onClick={()=>void mark('in_progress')}>Mark in progress</button><button className={p?.status==='completed'?'active':''} onClick={()=>void mark('completed')}>✓ Mark completed</button></div></div>
  </article><aside className="academy-outline"><span className="academy-eyebrow">COURSE CONTENT</span><h3>{course?.title}</h3>{courseLessons.map((l,i)=><button key={l.id} className={l.id===lesson.id?'current':''} onClick={()=>void openLesson(l)}><span>{String(i+1).padStart(2,'0')}</span><div><b>{l.title}</b><small>{progress[l.slug]?.status??'Not started'} · {l.estimated_minutes??'—'} min</small></div></button>)}</aside></div></section>;}

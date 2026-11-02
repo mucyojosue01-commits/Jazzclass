@@ -80,7 +80,7 @@ export default function App() {
   const [leftLiveNotes, setLeftLiveNotes] = useState<number[]>([]);
   const [rightLiveNotes, setRightLiveNotes] = useState<number[]>([]);
   const [playedNotes, setPlayedNotes] = useState<number[]>([]);
-  const { playing, paused, stepIndex, stepNotes, stepLabel, play, stop, pause, resume } = usePlayback();
+  const { playing, paused, hasSequence, stepIndex, stepNotes, stepLabel, play, stop, pause, resume } = usePlayback();
 
 
   useEffect(() => { savePersonalStudyData(personalData); },[personalData]);
@@ -349,6 +349,6 @@ export default function App() {
     </section>}
 
     <footer className="studio-footer"><b>JAZZCLASS · MUSIC KNOWLEDGE STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
-    {tab!=='my-stuff' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
+    {tab!=='my-stuff' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} hasSequence={hasSequence} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
   </div>;
 }

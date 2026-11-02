@@ -219,14 +219,10 @@ export default function App() {
   };
 
   const handlePlay = async (item: Lesson) => {
-    if (playing && selection?.id === item.id) {
-      stopPlayback();
-      return;
-    }
+    if ((playing || paused) && selection?.id === item.id) { if (paused) await resume(); else await pause(); return; }
     stopPlayback();
     setSelection(null);
     setLiveNotes([]); setLeftLiveNotes([]); setRightLiveNotes([]);
-    setSelection(item);
     setPlayedNotes([]);
     const isProgression = tab === 'progressions';
     const sourceSteps = item.steps?.length
@@ -241,6 +237,7 @@ export default function App() {
     const playable = { id: item.id, title: item.title, sub: item.sub ?? '', bpm: tempo, loop, steps: sourceSteps };
     if(isProgression) setPersonalData(old=>recordPractice(old,item.id,false));
     await unlockAudio();
+    setSelection(item);
     play(playable, (notes, lh, rh) => {
       setLiveNotes(notes);
       setLeftLiveNotes(lh);

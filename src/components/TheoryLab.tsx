@@ -76,7 +76,30 @@ export default function TheoryLab({onPlay}:Props){
   exploreTab==='Harmony'?makeScaleHarmony(exploreKey,selectedScale,harmonyStep,3).flatMap(x=>x.notes):
   exploreTab==='Arpeggios'?makeArpeggio(exploreKey,selectedChord,3,arpeggioDirection):
   makeLick(exploreKey,LICK_TEMPLATES[0].intervals,4);
- const playExplore=()=>{const title=exploreTab+' · '+KEY_OPTIONS[exploreKey].name;if(exploreTab==='Progressions'){const ps=realizeProgression(exploreKey,PROGRESSION_TEMPLATES.find(x=>x.id===progressionId)??PROGRESSION_TEMPLATES[0],2,exploreInversion);const steps=ps.map(x=>({notes:[...x.left,...x.right],left:x.left,right:x.right,label:x.name,beats:2}));onPlay(steps.flatMap(x=>x.notes),steps.flatMap(x=>x.left),steps.flatMap(x=>x.right),title,steps);}else{const left=exploreTab==='Slash Chords'?[exploreNotes[0]]:[];onPlay(exploreNotes,left,left.length?exploreNotes.slice(1):exploreNotes,title);}};
+ const playExplore=()=>{
+  const title=exploreTab+' · '+KEY_OPTIONS[exploreKey].name;
+  let sequence:Step[]|undefined;
+  if(exploreTab==='Scales'){
+   sequence=exploreNotes.map(n=>({notes:[n],left:[],right:[n],label:midiName(n),beats:.5}));
+  }else if(exploreTab==='Harmony'){
+   sequence=makeScaleHarmony(exploreKey,selectedScale,harmonyStep,3).map(x=>({notes:x.notes,left:[],right:x.notes,label:x.label,beats:1}));
+  }else if(exploreTab==='Arpeggios'||exploreTab==='Runs & Licks'){
+   sequence=exploreNotes.map(n=>({notes:[n],left:[],right:[n],label:midiName(n),beats:.5}));
+  }else if(exploreTab==='Progressions'){
+   const ps=realizeProgression(exploreKey,PROGRESSION_TEMPLATES.find(x=>x.id===progressionId)??PROGRESSION_TEMPLATES[0],2,exploreInversion);
+   sequence=ps.map(x=>({notes:[...x.left,...x.right],left:x.left,right:x.right,label:x.name,beats:2}));
+  }
+  if(sequence?.length){
+   onPlay(sequence.flatMap(x=>x.notes),sequence.flatMap(x=>x.left),sequence.flatMap(x=>x.right),title,sequence);
+   return;
+  }
+  if(exploreTab==='Slash Chords'){
+   const slash=makeSlashChord(exploreKey,selectedChord,slashBass,2);
+   onPlay([...slash.bass,...slash.upper],slash.bass,slash.upper,title);
+   return;
+  }
+  onPlay(exploreNotes,[],exploreNotes,title);
+ };
  if(workspace==='explore')return <section className="theory-academy">
  <nav className="theory-workspace-tabs" aria-label="Theory Lab workspace"><button className="active" onClick={()=>setWorkspace('explore')}>Explore</button><button onClick={()=>setWorkspace('courses')}>Courses & lessons</button></nav>
  <header className="academy-hero"><div><span className="detail-kicker">JAZZCLASS MUSIC ENGINE · ALL 12 KEYS</span><h2>Theory Lab</h2><p>Explore musical ideas freely. Choose a category, change the key and musical shape, then play the result on the single practice keyboard below.</p></div></header>

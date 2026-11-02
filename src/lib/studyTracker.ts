@@ -32,6 +32,10 @@ export function loadPersonalStudyData():PersonalStudyData {
 }
 export function savePersonalStudyData(data:PersonalStudyData):void {try{window.localStorage.setItem(STORAGE_KEY,JSON.stringify(normalizeStudyData(data)));}catch{/* storage unavailable */}}
 export function emptyStudyRecord():StudyRecord{return {status:'not_started',sessions:0,completedSessions:0,lastPracticed:null,completedAt:null,nextReviewAt:null,confidence:0};}
+export function addToStudy(data:PersonalStudyData,id:string):PersonalStudyData{
+ if(data.progress[id])return data;
+ return {...data,progress:{...data.progress,[id]:emptyStudyRecord()}};
+}
 export function recordPractice(data:PersonalStudyData,id:string,completed=false):PersonalStudyData{
  const current=data.progress[id]??emptyStudyRecord();const now=new Date().toISOString();
  return {...data,progress:{...data.progress,[id]:{...current,status:current.status==='completed'?'completed':'in_progress',sessions:current.sessions+(completed?0:1),completedSessions:current.completedSessions+(completed?1:0),lastPracticed:now}}};

@@ -72,3 +72,21 @@
 .my-empty{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.012)}
 .my-privacy{color:rgba(245,240,230,.38)}
 @media(max-width:650px){.my-stuff-hero{padding:17px}.my-stuff-hero h2{font-size:35px}.my-stuff-section{padding:13px}}
+
+
+/* My Stuff finishing pass — match the dashboard's neutral studio language */
+.my-stuff .detail-kicker{color:#9eada3}
+.my-stuff .my-stuff-hero{background:#111114}
+.my-stuff .my-stuff-hero p,.my-stuff .my-section-heading p{color:var(--muted)}
+.my-stuff .my-stats strong{color:#e8e7df}
+.my-stuff .my-notice{color:#b8c9bd}
+.my-stuff .folder-tabs button.selected,.my-stuff .folder-tab-wrap>button.selected{background:#202923;color:#d0ddd3;border-color:rgba(155,178,163,.4)}
+.my-stuff .my-open{color:#c3d0c7}
+.my-stuff .due-pill{border-color:rgba(155,178,163,.28);background:rgba(155,178,163,.08);color:#c4d1c8}
+.my-tracker-link{display:flex;flex-direction:column;gap:2px;text-decoration:none;font:24px Inter,system-ui,sans-serif;transition:background .18s,border-color .18s}
+.my-tracker-link small{font:600 8px Inter,system-ui,sans-serif;letter-spacing:.13em}
+.my-tracker-link:hover{background:rgba(155,178,163,.1);border-color:rgba(155,178,163,.5)}
+.my-stuff .my-item-actions input[type=checkbox]{accent-color:#9caf9f}
+.my-stuff .my-item-actions select:focus,.my-stuff .my-auth-form input:focus,.my-stuff .folder-create input:focus{outline:none;border-color:rgba(155,178,163,.55)}
+.my-stuff .my-section-heading h3{font-size:26px}
+#study-tracker{scroll-margin-top:18px}

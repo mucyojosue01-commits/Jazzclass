@@ -224,3 +224,8 @@
 @media(max-width:560px){.theory-explorer-panel{padding:13px}.theory-explorer-controls{display:grid;grid-template-columns:1fr 1fr}.theory-explorer-controls label,.theory-explorer-controls select{min-width:0;width:100%}.theory-workspace-tabs{width:100%}.theory-workspace-tabs button{flex:1}}
 
 .dock-transport{display:flex;align-items:center;gap:7px}.dock-pause{border:1px solid rgba(231,200,108,.42);border-radius:20px;background:rgba(231,200,108,.1);color:var(--gold-soft);font-size:9px;padding:5px 11px}.dock-pause:active,.dock-stop:active{transform:translateY(1px)}
+
+
+/* Progression study-list actions and cross-status indicators */
+.play-card-actions{position:absolute;right:12px;bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}.play-card-actions .favorite-toggle{position:static}.study-toggle{border:1px solid rgba(155,178,163,.3);border-radius:20px;background:#1b211e;color:#c4d1c8;padding:6px 9px;font-size:9px;white-space:nowrap}.study-toggle:hover:not(:disabled){background:#222b25;border-color:rgba(155,178,163,.55)}.study-toggle.is-added,.study-toggle:disabled{border-color:rgba(155,178,163,.18);background:rgba(155,178,163,.08);color:#9eada3;cursor:default}.cross-status{display:inline-flex!important;align-items:center;gap:4px;margin-top:5px;padding:4px 7px;border:1px solid rgba(155,178,163,.24);border-radius:20px;background:rgba(155,178,163,.07);color:#b9c9bd!important;font-size:9px!important;letter-spacing:.02em!important;text-transform:none!important}.favorite-status{border-color:rgba(231,200,108,.22);background:rgba(231,200,108,.06);color:#d8c78d!important}
+@media(max-width:560px){.play-card-actions{right:10px;bottom:9px;gap:5px}.study-toggle{font-size:9px;padding:6px 8px}}

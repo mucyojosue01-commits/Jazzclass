@@ -61,3 +61,9 @@ npm run build
 
 ## Current scope notes
 The first desktop MIDI increment covers single-track Standard MIDI import/playback and recording/export. Full engraved sheet music, multi-track editing and isolated left/right-hand track workflows are follow-on improvements.
+
+
+## Key-first harmony learning
+JazzClass teaches practical keyboard harmony through visible piano keys, chord names, hand shapes and musical movement. The Harmony Workshop includes transposable jazz, gospel, worship, blues and minor-key progressions, plus secondary dominants, tritone substitutions, diminished passing chords and chromatic approaches. Every exercise is selectable in all 12 keys and displays separate left-hand bass shapes and right-hand chord voicings.
+
+**Notation scope:** JazzClass is intentionally key-and-chord focused. It does not teach through staff bars, semibreves, breves or other note-duration symbols. The learning surface prioritizes keyboard keys, chord tones, voicings, progressions and passing-chord resolution. MIDI song playback still preserves the timing contained in imported MIDI files without presenting traditional rhythmic notation.

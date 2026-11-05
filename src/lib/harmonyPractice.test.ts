@@ -10,7 +10,7 @@ describe('harmony practice engine',()=>{
  it('transposes every chord while preserving its quality',()=>{
   const c=buildHarmonySteps('C','jazz-251','progression');
   const f=buildHarmonySteps('F','jazz-251','progression');
-  expect(f.map((step,index)=>(step.root-c[index].root+12)%12).toEqual([5,5,5]);
+  expect(f.map((step,index)=>(step.root-c[index].root+12)%12)).toEqual([5,5,5]);
   expect(f[2].right.map(n=>n%12)).toEqual([5,9,0,4]);
  });
  it('provides passing-chord pathways with a destination chord',()=>{

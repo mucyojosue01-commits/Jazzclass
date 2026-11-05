@@ -16,7 +16,7 @@ describe('harmony practice engine',()=>{
  it('provides passing-chord pathways with a destination chord',()=>{
   const path=buildHarmonySteps('F♯','tritone-resolution','passing');
   expect(path.length).toBeGreaterThanOrEqual(3);
-  expect(path.at(-1)?.symbol).toBe('F♯maj7');
+  expect(path[path.length-1]?.symbol).toBe('F♯maj7');
   expect(HARMONY_PASSING_PATHS.length).toBeGreaterThanOrEqual(4);
  });
  it('exposes useful progression families without rhythmic notation',()=>{

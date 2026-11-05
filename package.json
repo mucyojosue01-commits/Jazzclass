@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "desktop:dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron .\"",
-    "desktop:dist": "npm run build && electron-builder --win nsis x64"
+    "desktop:dist": "npm run build && electron-builder --win nsis x64",
+    "test": "vitest run"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -24,7 +25,8 @@
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
     "concurrently": "^9.1.2",
-    "wait-on": "^8.0.1"
+    "wait-on": "^8.0.1",
+    "vitest": "^2.1.5"
   },
   "main": "desktop/main.cjs",
   "build": {

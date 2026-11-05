@@ -1,40 +1,59 @@
-# JazzClass — F♯ Piano Lab
+# JazzClass — Piano Learning Studio
 
-JazzClass is a responsive piano-learning application focused on F♯ harmony, practical two-hand piano playing, jazz, gospel, praise, worship and pop.
+JazzClass is a practical piano-learning studio focused on jazz, gospel, praise, worship and pop. It combines a structured music-theory catalogue with a live practice keyboard and an expanding MIDI desktop workflow.
 
-## Current application
-- React + TypeScript + Vite frontend (not a single HTML-only prototype).
-- Dark, black-and-white interface with warm gold left-hand markers and chocolate right-hand markers.
-- Patrick Hand typeface, selected to match the handwritten font in the supplied reference.
-- Sampled acoustic grand-piano audio using Soundfont Player and the FluidR3_GM soundfont.
-- On-screen note readout showing left-hand and right-hand notes as they sound.
-- Adjustable tempo (default 72 BPM), touch/velocity, output level, loop and metronome controls.
-- F♯ major, natural minor, harmonic minor, melodic minor, modes, pentatonic and blues scales.
-- Harmonised major and minor chord-scale families, displayed as complete two-hand chords.
-- Jazz, worship, praise, pop and gospel progressions.
-- 50 passing-chord voicings with separate LH and RH combinations.
-- 100 short runs and licks, with musical tips and target-chord suggestions.
-- Responsive keyboard and lesson panels for phone and desktop.
+## Learning workspace
+- React + TypeScript + Vite application.
+- F♯-centred learning catalogue with theory tools for all 12 keys.
+- Scales, modes, chord qualities, chord-scale families, two-hand voicings, inversions, slash chords and progressions.
+- 60 passing-chord pathways and 100 short runs/licks.
+- Tempo, touch/velocity, output level, loop and metronome controls.
+- Live on-screen piano and hand-separated note feedback.
+- Personal folders, favourites and saved practice progress.
 
-## Run locally
+## MIDI Studio
+- Discover USB and Bluetooth MIDI devices supported by Windows.
+- Select independent MIDI input and output ports.
+- Live note detection, chord recognition, velocity and sustain-pedal monitoring.
+- Guided scale/chord exercises with note-match feedback.
+- MIDI recording and Standard MIDI File export.
+- Import and play Standard MIDI files.
+- Live note lane, staff-position preview, finger-number suggestions and a ii–V–I backing progression.
+
+## Windows desktop application
+The repository includes an Electron desktop wrapper and a Windows x64 NSIS installer workflow.
+
+### Build locally
 ```bash
 npm install
-npm run dev
+npm run desktop:dev
 ```
 
-Build:
+### Build the installer
+On Windows:
 ```bash
+npm run desktop:dist
+```
+
+GitHub Actions also builds the Windows installer and uploads a `JazzClass-Windows-x64` artifact. Open the repository's Actions tab, choose the latest successful **Build JazzClass for Windows** run, then download its artifact.
+
+## MIDI setup
+1. Connect the keyboard directly to the PC with a USB MIDI cable, or pair a supported Bluetooth MIDI device.
+2. Open JazzClass Desktop and select the keyboard under **MIDI Studio → Input Device**.
+3. Select an output device only if you want JazzClass to send MIDI back to external hardware.
+4. Play a key; the live note display, chord detector and exercise feedback should respond.
+
+MIDI availability depends on the keyboard's Windows driver and device support. For best latency, use a direct USB connection and a low-latency audio driver where available.
+
+## Audio
+JazzClass currently uses its local Web Audio synthesis engine for immediate practice tones. A bundled sampled grand-piano library and dedicated ASIO/native audio engine are later upgrades; this build does not install audio drivers or claim DAW-grade piano sampling.
+
+## Development commands
+```bash
+npm run dev
+npm run test
 npm run build
 ```
 
-## Audio
-The app loads sampled acoustic grand-piano notes on demand. The first load requires an internet connection. Press “Load real piano sound” or play a lesson after opening the app. Tempo defaults to 72 BPM to keep examples relaxed; use the tempo control to adjust it.
-
-## Music notation
-- LH = left hand (bass and support).
-- RH = right hand (chords, voicings and melody).
-- The keyboard and live note display distinguish LH in warm gold and RH in chocolate.
-- Enharmonic notes such as E♯ sound at the same pitch as F, while the lesson spelling preserves the harmonic function.
-
-## Next development areas
-A dedicated backend with accounts, saved practice sessions, learning history, custom progressions, and cross-device sync can be added as a separate Supabase layer.
+## Current scope notes
+The first desktop MIDI increment covers single-track Standard MIDI import/playback and recording/export. Full engraved sheet music, multi-track editing and isolated left/right-hand track workflows are follow-on improvements.

@@ -1,0 +1,30 @@
+name: Build JazzClass for Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feature/jazzclass-desktop-midi-studio]
+    paths:
+      - 'src/**'
+      - 'desktop/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - '.github/workflows/windows-desktop.yml'
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run desktop:dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JazzClass-Windows-x64
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 30

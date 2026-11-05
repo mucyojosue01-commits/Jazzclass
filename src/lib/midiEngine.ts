@@ -22,7 +22,7 @@ export function buildMidiFile(events:MidiNoteEvent[],bpm=90):Blob{
  const tempo=Math.round(60000000/Math.max(30,Math.min(300,bpm)));
  const header=chunk('MThd',[0,1,0,1,(ppq>>8)&255,ppq&255]);
  const tempoTrack=chunk('MTrk',[0,0xff,0x51,3,(tempo>>16)&255,(tempo>>8)&255,tempo&255,0,0xff,0x2f,0]);
- return new Blob([[...header,...tempoTrack,...chunk('MTrk',bytes)]],{type:'audio/midi'});
+ return new Blob([new Uint8Array([...header,...tempoTrack,...chunk('MTrk',bytes)])],{type:'audio/midi'});
 }
 export function parseMidiFile(buffer:ArrayBuffer):MidiNoteEvent[]{
  const d=new DataView(buffer),u32=(p:number)=>d.getUint32(p),u16=(p:number)=>d.getUint16(p);if(d.byteLength<14||String.fromCharCode(d.getUint8(0),d.getUint8(1),d.getUint8(2),d.getUint8(3))!=='MThd')throw new Error('This is not a Standard MIDI File.');

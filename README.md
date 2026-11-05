@@ -8,6 +8,7 @@ JazzClass is a practical piano-learning studio focused on jazz, gospel, praise, 
 - Scales, modes, chord qualities, chord-scale families, two-hand voicings, inversions, slash chords and progressions.
 - 60 passing-chord pathways and 100 short runs/licks.
 - Tempo, touch/velocity, output level, loop and metronome controls.
+- Ear-training workspace for interval and chord-quality recognition.
 - Live on-screen piano and hand-separated note feedback.
 - Personal folders, favourites and saved practice progress.
 
@@ -17,6 +18,8 @@ JazzClass is a practical piano-learning studio focused on jazz, gospel, praise, 
 - Live note detection, chord recognition, velocity and sustain-pedal monitoring.
 - Guided scale/chord exercises with note-match feedback.
 - MIDI recording and Standard MIDI File export.
+- Independent PC audio-output selection where supported by the audio driver/browser.
+- Selectable synthesized piano, electric-piano and organ practice voices.
 - Import and play Standard MIDI files.
 - Live note lane, staff-position preview, finger-number suggestions and a ii–V–I backing progression.
 
@@ -41,7 +44,8 @@ GitHub Actions also builds the Windows installer and uploads a `JazzClass-Window
 1. Connect the keyboard directly to the PC with a USB MIDI cable, or pair a supported Bluetooth MIDI device.
 2. Open JazzClass Desktop and select the keyboard under **MIDI Studio → Input Device**.
 3. Select an output device only if you want JazzClass to send MIDI back to external hardware.
-4. Play a key; the live note display, chord detector and exercise feedback should respond.
+4. Choose an instrument voice and PC audio output if desired.
+5. Play a key; the live note display, chord detector and exercise feedback should respond.
 
 MIDI availability depends on the keyboard's Windows driver and device support. For best latency, use a direct USB connection and a low-latency audio driver where available.
 

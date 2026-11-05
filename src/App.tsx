@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { loadProgressionCatalogue, type ProgressionRecord } from './lib/musicRepository';
 import { realizeProgression } from './progressionEngine';
 import { midi, note, scales, chordScales, chords, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
@@ -14,6 +14,8 @@ import MyStuff from './components/MyStuff';
 import { loadPersonalStudyData, savePersonalStudyData, normalizeStudyData, recordPractice, addToStudy, type PersonalStudyData } from './lib/studyTracker';
 import { supabase } from './lib/supabaseClient';
 import { makePassingLessons, passingCategories } from './passingChords';
+const MidiStudio = lazy(() => import('./components/MidiStudio'));
+const EarTraining = lazy(() => import('./components/EarTraining'));
 
 const TABS = [
   { id: 'theory', label: 'Theory Lab' },
@@ -27,6 +29,8 @@ const TABS = [
   { id: 'runs', label: 'Runs' },
   { id: 'tips', label: 'Tips' },
   { id: 'library', label: 'Knowledge Library' },
+  { id: 'midi-studio', label: 'MIDI Studio' },
+  { id: 'ear-training', label: 'Ear Training' },
 ] as const;
 type Tab = typeof TABS[number]['id'];
 
@@ -49,6 +53,8 @@ const descriptions: Record<Tab, { title: string; copy: string }> = {
   tips: { title: 'Practice notes', copy: 'Practical advice for touch, timing, harmony and developing a musical feel.' },
   library: { title: 'Knowledge library', copy: 'Browse the structured music knowledge stored in your JazzClass Supabase database.' },
   'my-stuff': { title: 'My Stuff', copy: 'Your saved progressions, folders and learning progress.' },
+  'midi-studio': { title: 'MIDI Studio', copy: 'Connect your physical keyboard, practise in real time, record performances and study songs.' },
+  'ear-training': { title: 'Ear Training', copy: 'Recognise intervals and chord qualities by listening.' },
 };
 
 export default function App() {
@@ -310,7 +316,7 @@ export default function App() {
 
     {tab==='my-stuff' ? <MyStuff items={dbProgressions.map(item=>({id:item.slug,title:item.title,category:item.style}))} value={personalData} onChange={setPersonalData} onOpen={openProgression} syncStatus={syncStatus} userEmail={accountEmail} onAuthChange={()=>{void supabase?.auth.getUser().then(({data})=>setAccountEmail(data.user?.email??null));}}/> : <main className="studio-main">
       <section className="catalog">
-        {tab !== 'theory' && <div className="catalog-heading">
+        {tab !== 'theory' && tab !== 'midi-studio' && tab !== 'ear-training' && <div className="catalog-heading">
           <SectionIntro title={header.title} copy={header.copy} meta={data.length + ' LESSONS'} />
           {tab !== 'tips' && <input className="lesson-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a lesson…" aria-label="Find a lesson" />}
         </div>}
@@ -319,12 +325,12 @@ export default function App() {
         {tab === 'passing' && <div className="arrangement-panel passing-settings"><label className="setting-field">KEY<select value={progressionKey} onChange={e=>{setProgressionKey(e.target.value);stopPlayback();setSelection(null);}}>{['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'].map(k=><option key={k}>{k}</option>)}</select></label><label className="setting-field">CATEGORY<select value={passingCategory} onChange={e=>{setPassingCategory(e.target.value);stopPlayback();setSelection(null);}}><option>All</option>{passingCategories.map(c=><option key={c}>{c}</option>)}</select></label><span className="catalog-status">60 original pathways · {passingCategories.length} technique families · transposable to all 12 keys</span></div>}
         {tab === 'progressions' && <div className="catalog-status">{progressionsLoading ? 'Loading 100 professional progressions from JazzClass database…' : progressionsError ? 'Database: '+progressionsError : dbProgressions.length+' progressions loaded · '+progressionKey+' major reference key'}</div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
-        {tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
+        {tab === 'midi-studio' ? <Suspense fallback={<div className="empty-state">Opening MIDI Studio…</div>}><MidiStudio /></Suspense> : tab === 'ear-training' ? <Suspense fallback={<div className="empty-state">Opening Ear Training…</div>}><EarTraining /></Suspense> : tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
           <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} favorite={Boolean(personalData.favorites[item.id]!==undefined)} onToggleFavorite={tab==='progressions'?()=>toggleFavorite(item.id):undefined} inStudy={Boolean(personalData.progress[item.id])} onAddToStudy={tab==='progressions'?()=>setPersonalData(old=>addToStudy(old,item.id)):undefined} />)}</div>}
-        {!data.length && tab !== 'tips' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
+        {!data.length && tab !== 'tips' && tab !== 'midi-studio' && tab !== 'ear-training' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
       </section>
 
-      {tab!=='theory' && <aside key={selection?.id ?? 'no-selected-lesson'} className="lesson-detail">
+      {tab!=='theory' && tab!=='midi-studio' && tab!=='ear-training' && <aside key={selection?.id ?? 'no-selected-lesson'} className="lesson-detail">
         <div className="detail-kicker">LESSON DETAILS</div>
         {current ? <>
           <h2>{current.title}</h2><span className="detail-sub">{current.sub || current.category}</span>
@@ -337,7 +343,7 @@ export default function App() {
       </aside>}
     </main>}
 
-    {tab!=='my-stuff' && <section className="practice-panel">
+    {tab!=='my-stuff' && tab!=='midi-studio' && tab!=='ear-training' && <section className="practice-panel">
       <div className="practice-heading"><div><div className="detail-kicker">LIVE PIANO · EVERY NOTE IS VISIBLE</div><h2>Practice keyboard</h2><p>White and black keys only. Green = left hand · yellow = right hand · amber = free play.</p></div><span className="audio-badge"><i /> BROWSER AUDIO ENGINE</span></div>
       <div className="now-playing"><b>NOW PLAYING</b><div>{playedNotes.length ? playedNotes.map((n, i) => <span key={i} className={active.includes(n) ? 'note-chip active-chip' : 'note-chip'}>{note(n)}</span>) : <small>Notes and chord tones will appear here as they sound.</small>}</div></div>
       <div className="practice-controls">
@@ -352,6 +358,6 @@ export default function App() {
     </section>}
 
     <footer className="studio-footer"><b>JAZZCLASS · MUSIC KNOWLEDGE STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
-    {tab!=='my-stuff' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} hasSequence={hasSequence} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
+    {tab!=='my-stuff' && tab!=='midi-studio' && tab!=='ear-training' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} hasSequence={hasSequence} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
   </div>;
 }

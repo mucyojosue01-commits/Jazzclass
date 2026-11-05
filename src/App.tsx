@@ -4,6 +4,7 @@ import { realizeProgression } from './progressionEngine';
 import { midi, note, scales, chordScales, chords, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
 import { playNote, unlockAudio, playMetronomeTick, closeAudio } from './lib/pianoAudio';
 import PianoDock from './components/PianoDock';
+import InstallAppButton from './components/InstallAppButton';
 import TabBar from './components/TabBar';
 import PlayCard from './components/PlayCard';
 import SectionIntro from './components/SectionIntro';
@@ -300,7 +301,7 @@ export default function App() {
   return <div className="studio-shell">
     <header className="studio-header">
       <div className="brand-lockup"><span className="brand-mark">F♯</span><span><b>JAZZCLASS</b><small>PIANO STUDIO · ALL 12 KEYS</small></span></div>
-      <span className="header-pill"><i /> ALL-KEY THEORY</span>
+      <div className="header-actions"><span className="header-pill"><i /> ALL-KEY THEORY</span><InstallAppButton /></div>
     </header>
 
     <section className="hero">

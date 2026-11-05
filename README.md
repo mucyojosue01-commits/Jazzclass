@@ -68,3 +68,10 @@ The first desktop MIDI increment covers single-track Standard MIDI import/playba
 JazzClass teaches practical keyboard harmony through visible piano keys, chord names, hand shapes and musical movement. The Harmony Workshop includes transposable jazz, gospel, worship, blues and minor-key progressions, plus secondary dominants, tritone substitutions, diminished passing chords and chromatic approaches. Every exercise is selectable in all 12 keys and displays separate left-hand bass shapes and right-hand chord voicings.
 
 **Notation scope:** JazzClass is intentionally key-and-chord focused. It does not teach through staff bars, semibreves, breves or other note-duration symbols. The learning surface prioritizes keyboard keys, chord tones, voicings, progressions and passing-chord resolution. MIDI song playback still preserves the timing contained in imported MIDI files without presenting traditional rhythmic notation.
+
+
+## Web app and installable PWA
+JazzClass is available as a responsive browser application as well as a Windows desktop build. The web app can be installed from supported browsers (Chrome/Edge) and includes an app manifest, branded icon, and a service worker that caches the application shell and previously loaded same-origin assets for repeat/offline launches. Personal practice data remains available in local storage; signed-in cloud workspace sync and the online progression catalogue require an internet connection.
+
+### Browser MIDI support
+For live external keyboard input in the web app, use a current desktop Chrome or Edge browser over HTTPS and grant MIDI permission when prompted. Browser MIDI availability varies by browser and operating system; the Windows desktop application remains the fallback where Web MIDI is unavailable. Mobile browsers generally do not expose the same USB/Bluetooth MIDI access as desktop browsers.

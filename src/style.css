@@ -283,3 +283,6 @@
 .harmony-navigation{display:flex;justify-content:space-between;gap:8px}
 .harmony-navigation button:disabled{opacity:.3;cursor:not-allowed}
 @media(max-width:650px){.harmony-trainer{padding:13px}.harmony-trainer-head{flex-direction:column}.harmony-controls{display:grid;grid-template-columns:1fr 1fr}.harmony-controls label,.harmony-controls select{min-width:0;width:100%}.harmony-mode-switch{grid-column:1/-1}.harmony-mode-switch button{flex:1}.harmony-hands{grid-template-columns:1fr}.harmony-current-title{align-items:flex-start;flex-direction:column}.harmony-key-map span{font-size:7px;min-height:28px}.harmony-navigation button{flex:1}}
+
+/* Installable web app controls */
+.header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.header-actions .header-pill{margin-left:0}.pwa-install-button{border:1px solid rgba(231,200,108,.45);border-radius:30px;background:rgba(231,200,108,.1);color:#f1dda0;padding:8px 12px;font-size:9px;letter-spacing:.12em;white-space:nowrap}.pwa-install-button:hover{background:rgba(231,200,108,.18)}.pwa-installed{border:1px solid rgba(120,190,140,.3);border-radius:30px;padding:8px 11px;color:#a7d8b4;font-size:8px;letter-spacing:.1em;white-space:nowrap}@media(max-width:600px){.studio-header{height:auto;flex-wrap:wrap}.header-actions{width:100%;justify-content:flex-end}.header-actions .header-pill{display:none}}

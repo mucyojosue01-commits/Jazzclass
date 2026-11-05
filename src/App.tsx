@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { loadProgressionCatalogue, type ProgressionRecord } from './lib/musicRepository';
 import { realizeProgression } from './progressionEngine';
 import { midi, note, scales, chordScales, chords, arpeggios, harmonies, runs, tips, keyNotes, type Lesson } from './music';
@@ -14,8 +14,8 @@ import MyStuff from './components/MyStuff';
 import { loadPersonalStudyData, savePersonalStudyData, normalizeStudyData, recordPractice, addToStudy, type PersonalStudyData } from './lib/studyTracker';
 import { supabase } from './lib/supabaseClient';
 import { makePassingLessons, passingCategories } from './passingChords';
-import MidiStudio from './components/MidiStudio';
-import EarTraining from './components/EarTraining';
+const MidiStudio = lazy(() => import('./components/MidiStudio'));
+const EarTraining = lazy(() => import('./components/EarTraining'));
 
 const TABS = [
   { id: 'theory', label: 'Theory Lab' },
@@ -325,7 +325,7 @@ export default function App() {
         {tab === 'passing' && <div className="arrangement-panel passing-settings"><label className="setting-field">KEY<select value={progressionKey} onChange={e=>{setProgressionKey(e.target.value);stopPlayback();setSelection(null);}}>{['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'].map(k=><option key={k}>{k}</option>)}</select></label><label className="setting-field">CATEGORY<select value={passingCategory} onChange={e=>{setPassingCategory(e.target.value);stopPlayback();setSelection(null);}}><option>All</option>{passingCategories.map(c=><option key={c}>{c}</option>)}</select></label><span className="catalog-status">60 original pathways · {passingCategories.length} technique families · transposable to all 12 keys</span></div>}
         {tab === 'progressions' && <div className="catalog-status">{progressionsLoading ? 'Loading 100 professional progressions from JazzClass database…' : progressionsError ? 'Database: '+progressionsError : dbProgressions.length+' progressions loaded · '+progressionKey+' major reference key'}</div>}
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
-        {tab === 'midi-studio' ? <MidiStudio /> : tab === 'ear-training' ? <EarTraining /> : tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
+        {tab === 'midi-studio' ? <Suspense fallback={<div className="empty-state">Opening MIDI Studio…</div>}><MidiStudio /></Suspense> : tab === 'ear-training' ? <Suspense fallback={<div className="empty-state">Opening Ear Training…</div>}><EarTraining /></Suspense> : tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
           <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} favorite={Boolean(personalData.favorites[item.id]!==undefined)} onToggleFavorite={tab==='progressions'?()=>toggleFavorite(item.id):undefined} inStudy={Boolean(personalData.progress[item.id])} onAddToStudy={tab==='progressions'?()=>setPersonalData(old=>addToStudy(old,item.id)):undefined} />)}</div>}
         {!data.length && tab !== 'tips' && tab !== 'midi-studio' && tab !== 'ear-training' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
       </section>

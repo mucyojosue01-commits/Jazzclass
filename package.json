@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "build": "npm run test && tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "desktop:dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron .\"",
     "desktop:dist": "npm run build && electron-builder --win nsis --x64",

@@ -1,0 +1,24 @@
+{
+  "id": "/",
+  "name": "JazzClass Piano Studio",
+  "short_name": "JazzClass",
+  "description": "A key-first piano learning studio for chords, progressions, passing chords and MIDI practice.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#08080b",
+  "theme_color": "#08080b",
+  "categories": [
+    "education",
+    "music"
+  ],
+  "icons": [
+    {
+      "src": "/jazzclass-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

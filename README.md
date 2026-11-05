@@ -21,7 +21,8 @@ JazzClass is a practical piano-learning studio focused on jazz, gospel, praise, 
 - Independent PC audio-output selection where supported by the audio driver/browser.
 - Selectable synthesized piano, electric-piano and organ practice voices.
 - Import and play Standard MIDI files.
-- Live note lane, staff-position preview, finger-number suggestions and a ii–V–I backing progression.
+- Live key map, active chord-tone highlights, separate left/right-hand voicings and a ii–V–I backing progression.
+- Key-first Harmony Workshop with jazz, gospel, worship, blues and minor progressions plus passing-chord pathways.
 
 ## Windows desktop application
 The repository includes an Electron desktop wrapper and a Windows x64 NSIS installer workflow.
@@ -60,7 +61,7 @@ npm run build
 ```
 
 ## Current scope notes
-The first desktop MIDI increment covers single-track Standard MIDI import/playback and recording/export. Full engraved sheet music, multi-track editing and isolated left/right-hand track workflows are follow-on improvements.
+The first desktop MIDI increment covers single-track Standard MIDI import/playback and recording/export. Traditional staff bars and note-duration notation are intentionally out of scope; the learning interface focuses on keyboard keys, chord names, voicings, progressions and passing chords. Advanced multi-track MIDI editing and isolated left/right-hand MIDI tracks remain future upgrades.
 
 
 ## Key-first harmony learning

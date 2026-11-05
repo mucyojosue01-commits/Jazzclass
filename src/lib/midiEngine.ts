@@ -20,7 +20,7 @@ export function buildMidiFile(events:MidiNoteEvent[],bpm=90):Blob{
  pushVar(0);bytes.push(0xff,0x2f,0);
  const chunk=(id:string,data:number[])=>[...id.split('').map(c=>c.charCodeAt(0)),(data.length>>>24)&255,(data.length>>>16)&255,(data.length>>>8)&255,data.length&255,...data];
  const tempo=Math.round(60000000/Math.max(30,Math.min(300,bpm)));
- const header=chunk('MThd',[0,1,0,1,(ppq>>8)&255,ppq&255]);
+ const header=chunk('MThd',[0,1,0,2,(ppq>>8)&255,ppq&255]);
  const tempoTrack=chunk('MTrk',[0,0xff,0x51,3,(tempo>>16)&255,(tempo>>8)&255,tempo&255,0,0xff,0x2f,0]);
  return new Blob([new Uint8Array([...header,...tempoTrack,...chunk('MTrk',bytes)])],{type:'audio/midi'});
 }

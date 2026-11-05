@@ -4,7 +4,6 @@ export default function InstallAppButton(){
  const [prompt,setPrompt]=useState<InstallPromptEvent|null>(null),[installed,setInstalled]=useState(false),[help,setHelp]=useState(false);
  useEffect(()=>{const onPrompt=(event:Event)=>{event.preventDefault();setPrompt(event as InstallPromptEvent);};const onInstalled=()=>{setInstalled(true);setPrompt(null);setHelp(false);};setInstalled(window.matchMedia('(display-mode: standalone)').matches||Boolean((navigator as Navigator&{standalone?:boolean}).standalone));window.addEventListener('beforeinstallprompt',onPrompt);window.addEventListener('appinstalled',onInstalled);return()=>{window.removeEventListener('beforeinstallprompt',onPrompt);window.removeEventListener('appinstalled',onInstalled);};},[]);
  if(installed)return <span className="pwa-installed" aria-label="JazzClass installed">✓ APP INSTALLED</span>;
- if(!prompt)return <button className="pwa-install-button" onClick={()=>setHelp(v=>!v)} aria-expanded={help}>＋ INSTALL APP</button>;
- const install=async()=>{await prompt.prompt();const choice=await prompt.userChoice;if(choice.outcome==='accepted')setInstalled(true);setPrompt(null);};
- return <button className="pwa-install-button" onClick={()=>void install()}>↓ INSTALL APP</button>;
+ const install=async()=>{if(!prompt){setHelp(v=>!v);return;}await prompt.prompt();const choice=await prompt.userChoice;if(choice.outcome==='accepted')setInstalled(true);setPrompt(null);};
+ return <div className="pwa-install-wrap"><button className="pwa-install-button" onClick={()=>void install()} aria-expanded={help}>{prompt?'↓ INSTALL APP':'＋ INSTALL APP'}</button>{help&&<span className="pwa-install-help">In Chrome or Edge, open the browser menu and choose “Install JazzClass” or “Add to Home screen”.</span>}</div>;
 }

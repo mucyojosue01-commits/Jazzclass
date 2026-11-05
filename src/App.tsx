@@ -313,7 +313,7 @@ export default function App() {
 
     {tab==='my-stuff' ? <MyStuff items={dbProgressions.map(item=>({id:item.slug,title:item.title,category:item.style}))} value={personalData} onChange={setPersonalData} onOpen={openProgression} syncStatus={syncStatus} userEmail={accountEmail} onAuthChange={()=>{void supabase?.auth.getUser().then(({data})=>setAccountEmail(data.user?.email??null));}}/> : <main className="studio-main">
       <section className="catalog">
-        {tab !== 'theory' && <div className="catalog-heading">
+        {tab !== 'theory' && tab !== 'midi-studio' && <div className="catalog-heading">
           <SectionIntro title={header.title} copy={header.copy} meta={data.length + ' LESSONS'} />
           {tab !== 'tips' && <input className="lesson-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a lesson…" aria-label="Find a lesson" />}
         </div>}
@@ -324,10 +324,10 @@ export default function App() {
         {tab === 'chords' && <div className="family-switch"><button className={showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(true)}>Chord-scale families</button><button className={!showFamilies ? 'selected' : ''} onClick={() => setShowFamilies(false)}>Chord voicings only</button></div>}
         {tab === 'midi-studio' ? <MidiStudio /> : tab === 'theory' ? <TheoryLab onPlay={handleTheoryPlay} /> : tab === 'library' ? <KnowledgeLibrary /> : tab === 'tips' ? <div className="tips-list">{tips.map((tip, i) => <article className="tip-card" key={tip.title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{tip.title}</h3><p>{tip.body}</p></div></article>)}</div> :
           <div className="lesson-grid">{data.map(item => <PlayCard key={item.id} item={item} active={selection?.id === item.id} playing={playing && selection?.id === item.id} activeNotes={active} onPlay={() => void handlePlay(item)} favorite={Boolean(personalData.favorites[item.id]!==undefined)} onToggleFavorite={tab==='progressions'?()=>toggleFavorite(item.id):undefined} inStudy={Boolean(personalData.progress[item.id])} onAddToStudy={tab==='progressions'?()=>setPersonalData(old=>addToStudy(old,item.id)):undefined} />)}</div>}
-        {!data.length && tab !== 'tips' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
+        {!data.length && tab !== 'tips' && tab !== 'midi-studio' && <div className="empty-state">{tab === 'progressions' && progressionsLoading ? 'Loading the progression catalogue…' : tab === 'progressions' && progressionsError ? 'Could not load the database catalogue: '+progressionsError : 'No lessons match that search.'}</div>}
       </section>
 
-      {tab!=='theory' && <aside key={selection?.id ?? 'no-selected-lesson'} className="lesson-detail">
+      {tab!=='theory' && tab!=='midi-studio' && <aside key={selection?.id ?? 'no-selected-lesson'} className="lesson-detail">
         <div className="detail-kicker">LESSON DETAILS</div>
         {current ? <>
           <h2>{current.title}</h2><span className="detail-sub">{current.sub || current.category}</span>

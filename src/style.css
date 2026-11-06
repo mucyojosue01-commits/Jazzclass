@@ -433,3 +433,5 @@
 .midi-sequence-nav>span{margin-right:5px;color:#a39a89;font-size:7px;letter-spacing:.14em}
 .midi-sequence-nav button{border:1px solid rgba(255,255,255,.1);border-radius:6px;background:#19191e;color:#bdb4a5;padding:6px 8px;font-size:8px}
 .midi-sequence-nav button.active{border-color:rgba(231,200,108,.55);background:rgba(231,200,108,.11);color:var(--gold-soft)}
+
+.midi-empty{padding:12px;border:1px dashed rgba(255,255,255,.12);border-radius:8px;color:#918a7f;font-size:9px;line-height:1.5}

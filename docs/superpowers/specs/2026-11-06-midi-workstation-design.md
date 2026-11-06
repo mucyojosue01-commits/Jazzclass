@@ -6,9 +6,9 @@ Turn the MIDI Studio into the primary, full-screen browser piano workstation. Th
 ## Goals
 - Use the viewport efficiently with a dedicated workstation layout, not the current narrow catalogue/sidebar shell.
 - Synchronize physical MIDI note-on/note-off and sustain state with the shared bottom piano.
-- Provide reliable chord and note-set assessment with precision, recall, F1-style score, missing/extra notes, hand separation, timing and velocity signals where measurable.
+- Provide reliable chord and note-set assessment with precision, recall, F1-style score, missing/extra notes, hand separation, and order-aware sequence scoring for scale lessons; show live velocity as a separate signal.
 - Provide a structured, transposable lesson path with levels, technique groups, clear targets and repeatable practice.
-- Persist local lesson progress, session count, best score, practice time, weak notes and review state without requiring Supabase.
+- Persist local lesson progress, attempt count, best score, practice time and weak pitch classes without requiring Supabase.
 - Retain device selection, audio instrument, recording/export, MIDI import/playback, metronome and Harmony Workshop while making the controls coherent.
 
 ## Non-goals
@@ -26,7 +26,7 @@ Turn the MIDI Studio into the primary, full-screen browser piano workstation. Th
 Keep React, TypeScript, Vite, Web MIDI and the current Web Audio engine. Add a pure performance-assessment module with deterministic tests. Keep device ownership inside MidiStudio, publish typed live-key state through a window CustomEvent, and let App render the bottom PianoDock on the MIDI tab and consume that event. Persist MIDI lesson records in a versioned localStorage key with defensive migration/normalization. Use CSS scoped to the MIDI workstation and responsive viewport breakpoints.
 
 ## Assessment model
-For a target pitch set and a captured attempt, calculate precision, recall and F1-style pitch match; report missing and extra pitch classes/notes separately. When a timed target exists, add onset timing deviation as a separate metric rather than hiding it inside pitch accuracy. Show velocity consistency only when enough note attacks exist. Avoid presenting a misleading single percentage when the attempt has no notes or when timing data is unavailable.
+For a target pitch set and a captured attempt, calculate precision, recall and F1-style pitch match; report missing and extra pitch classes/notes separately. For ordered scale lessons, combine pitch-set F1 (70%) with sequence-order score (30%); chord/voicing lessons use pitch-set F1. Keep pitch-class fit as a separate diagnostic and velocity as a live readout rather than implying unimplemented timing or dynamics grading. Avoid presenting a misleading single percentage when the attempt has no notes or when timing data is unavailable.
 
 ## Constraints and calls
 - All 12 keys; preserve keyboard range and existing sound engine.

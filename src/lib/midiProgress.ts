@@ -16,7 +16,7 @@ export function normalizeMidiProgress(input:unknown):MidiProgress{
  }
  return{version:1,lessons,totalPracticeSeconds:Math.floor(clamp(Number(raw.totalPracticeSeconds),0,1e9)),totalAttempts:Math.floor(clamp(Number(raw.totalAttempts),0,1e9)),lastPracticed:typeof raw.lastPracticed==='string'?raw.lastPracticed:null};
 }
-const getStorage=():MidiStorage|null=>typeof window!=='undefined'?window.localStorage:null;
+const getStorage=():MidiStorage|null=>{try{return typeof window!=='undefined'?window.localStorage:null;}catch{return null;}};
 export function loadMidiProgress(storage:MidiStorage|null=getStorage()):MidiProgress{
  if(!storage)return createMidiProgress();
  try{const raw=storage.getItem(KEY);return raw?normalizeMidiProgress(JSON.parse(raw)):createMidiProgress();}catch{return createMidiProgress();}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assessPitchSet } from './performanceAnalysis';
+import { assessNoteSequence, assessPitchSet } from './performanceAnalysis';
 
 describe('MIDI pitch assessment', () => {
   it('awards a perfect score for an exact voicing', () => {
@@ -38,4 +38,19 @@ describe('MIDI pitch assessment', () => {
     expect(result.score).toBe(100);
     expect(result.matched).toEqual([60, 64, 67]);
   });
+});
+
+describe('MIDI sequence order assessment',()=>{
+ it('awards a perfect score for notes played in target order',()=>{
+  expect(assessNoteSequence([60,62,64,65],[60,62,64,65])).toBe(100);
+ });
+ it('penalizes a correct note set played in the wrong order',()=>{
+  expect(assessNoteSequence([60,62,64,65],[65,64,62,60])).toBeLessThan(50);
+ });
+ it('penalizes inserted notes without discarding the correct sequence',()=>{
+  expect(assessNoteSequence([60,62,64],[60,61,62,64])).toBe(75);
+ });
+ it('returns zero for an empty attempt',()=>{
+  expect(assessNoteSequence([60,62],[])).toBe(0);
+ });
 });

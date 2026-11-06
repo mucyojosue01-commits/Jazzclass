@@ -12,17 +12,19 @@ JazzClass is a practical piano-learning studio focused on jazz, gospel, praise, 
 - Live on-screen piano and hand-separated note feedback.
 - Personal folders, favourites and saved practice progress.
 
-## MIDI Studio
-- Discover USB and Bluetooth MIDI devices supported by Windows.
-- Select independent MIDI input and output ports.
-- Live note detection, chord recognition, velocity and sustain-pedal monitoring.
-- Guided scale/chord exercises with note-match feedback.
-- MIDI recording and Standard MIDI File export.
-- Independent PC audio-output selection where supported by the audio driver/browser.
-- Selectable synthesized piano, electric-piano and organ practice voices.
-- Import and play Standard MIDI files.
-- Live key map, active chord-tone highlights, separate left/right-hand voicings and a ii–V–I backing progression.
-- Key-first Harmony Workshop with jazz, gospel, worship, blues and minor progressions plus passing-chord pathways.
+## MIDI Studio — Performance Workstation
+The browser MIDI Studio is the primary full-width performance workspace. It includes:
+- Full-width responsive workstation layout with a fixed live piano dock.
+- USB/Bluetooth MIDI input discovery, independent MIDI output selection, and selectable browser audio output.
+- Live note names, chord recognition, velocity readout, sustain-pedal state, and separate left/right hand displays.
+- Automatic bottom-piano synchronization from physical MIDI note-on/note-off events; the visible keyboard expands to include notes outside its default range.
+- A 20-lesson, all-12-key curriculum across Foundation, Developing, Advanced and Professional levels: scales, triads/sevenths, jazz voicings, gospel/worship, progressions and technique.
+- Chord-by-chord practice for jazz turnarounds, minor iiø–V–i and blues pathways.
+- Hybrid pitch matching: precision, recall, F1-style score, pitch-class fit, matched notes, missing notes and extra notes.
+- Local-first lesson records: attempts, personal best, mastery threshold, practice time and recurring weak pitch classes. No Supabase project is required for MIDI progress.
+- MIDI recording, Standard MIDI File export, MIDI import/playback, metronome, tempo control, instrument selection and Harmony Workshop.
+
+**Assessment note:** scoring evaluates the MIDI pitches actually received from the keyboard. Pitch-class fit helps identify the right harmony when octave placement differs; exact-pitch F1 still penalizes octave errors and extra notes. The app does not claim to assess acoustic piano sound through the microphone.
 
 ## Windows desktop application
 The repository includes an Electron desktop wrapper and a Windows x64 NSIS installer workflow.

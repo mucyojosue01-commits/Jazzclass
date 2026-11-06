@@ -16,9 +16,9 @@ JazzClass is a practical piano-learning studio focused on jazz, gospel, praise, 
 The browser MIDI Studio is the primary full-width performance workspace. It includes:
 - Full-width responsive workstation layout with a fixed live piano dock.
 - USB/Bluetooth MIDI input discovery, independent MIDI output selection, and selectable browser audio output.
-- Live note names, chord recognition, velocity readout, sustain-pedal state, and separate left/right hand displays.
+- Live note names, chord recognition, velocity readout, sustain-pedal state, and separate left/right hand displays with a configurable split point.
 - Automatic bottom-piano synchronization from physical MIDI note-on/note-off events; the visible keyboard expands to include notes outside its default range.
-- A 20-lesson, all-12-key curriculum across Foundation, Developing, Advanced and Professional levels: scales, triads/sevenths, jazz voicings, gospel/worship, progressions and technique.
+- A 19-lesson, all-12-key curriculum across Foundation, Developing, Advanced and Professional levels: scales, triads/sevenths, jazz voicings, gospel/worship, progressions and technique.
 - Chord-by-chord practice for jazz turnarounds, minor iiø–V–i and blues pathways.
 - Hybrid pitch matching: precision, recall, F1-style score, pitch-class fit, matched notes, missing notes and extra notes.
 - Local-first lesson records: attempts, personal best, mastery threshold, practice time and recurring weak pitch classes. No Supabase project is required for MIDI progress.

@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {getMidiLessons,MIDI_LESSONS} from './midiCurriculum';
+import {filterMidiLessons,getMidiLessons,MIDI_LESSONS} from './midiCurriculum';
 
 describe('MIDI lesson curriculum',()=>{
  it('provides a structured curriculum across four difficulty levels',()=>{
@@ -11,6 +11,15 @@ describe('MIDI lesson curriculum',()=>{
   const c=getMidiLessons(0).find(x=>x.id==='triad-major');
   expect(fsharp?.baseNotes).toEqual([66,70,73]);
   expect(c?.baseNotes).toEqual([60,64,67]);
+ });
+ it('filters by difficulty, category and lesson search without leaking higher levels',()=>{
+  const lessons=getMidiLessons(6);
+  const foundation=filterMidiLessons(lessons,'Foundation','All');
+  expect(foundation.length).toBeGreaterThan(0);
+  expect(foundation.every(item=>item.level==='Foundation')).toBe(true);
+  const advancedJazz=filterMidiLessons(lessons,'Advanced','Jazz voicings','rootless');
+  expect(advancedJazz.length).toBe(2);
+  expect(advancedJazz.every(item=>item.level!=='Professional'&&item.category==='Jazz voicings')).toBe(true);
  });
  it('keeps progression steps individually assessable and transposable',()=>{
   const progression=getMidiLessons(6).find(x=>x.id==='turnaround');

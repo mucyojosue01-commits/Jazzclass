@@ -12,8 +12,12 @@ const handKeyStyle = (hand: 'left' | 'right' | null, black: boolean): CSSPropert
   return {};
 };
 export default function Piano({ activeNotes = [], leftNotes = [], rightNotes = [], onKey, compact = false }: Props) {
+  const lowestActive=activeNotes.length?Math.min(...activeNotes):KEYBOARD_LOW;
+  const highestActive=activeNotes.length?Math.max(...activeNotes):KEYBOARD_HIGH;
+  const low=Math.min(KEYBOARD_LOW,Math.max(0,Math.floor(lowestActive/12)*12));
+  const high=Math.max(KEYBOARD_HIGH,Math.min(127,Math.ceil((highestActive+1)/12)*12-1));
   const whites:number[] = [];
-  for (let m=KEYBOARD_LOW; m<=KEYBOARD_HIGH; m++) if (WHITE.includes(m%12)) whites.push(m);
+  for (let m=low; m<=high; m++) if (WHITE.includes(m%12)) whites.push(m);
   const blacks = whites.flatMap((m,i) => i < whites.length-1 && BLACK.includes((m+1)%12) ? [{midi:m+1,index:i}] : []);
   return <div className={'dock-piano '+(compact?'compact':'')} style={{minWidth:470}}>
     <div className="dock-whites">{whites.map(m => { const hand = leftNotes.includes(m) ? 'left' : rightNotes.includes(m) ? 'right' : null; return <button key={m} type="button" aria-label={pcName(m)} className={'dock-key white '+(hand==='left'?'active-left':hand==='right'?'active-right':activeNotes.includes(m)?'active-gold':'')} style={handKeyStyle(hand,false)} onPointerDown={() => onKey?.(m)}><span>{pcName(m)}</span></button>; })}</div>

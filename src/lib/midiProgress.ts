@@ -1,7 +1,7 @@
 export type MidiLessonProgress={attempts:number;bestScore:number;lastScore:number;lastPracticed:string|null;totalPracticeSeconds:number;weakPitchClasses:number[];mastered:boolean};
 export type MidiProgress={version:1;lessons:Record<string,MidiLessonProgress>;totalPracticeSeconds:number;totalAttempts:number;lastPracticed:string|null};
 export type MidiStorage={getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void};
-export type MidiProgressSummary={attemptedLessons:number;masteredLessons:number;averageBestScore:number;totalAttempts:number;totalPracticeSeconds:number;lastPracticed:string|null};
+export type MidiProgressSummary={totalLessons:number;attemptedLessons:number;masteredLessons:number;averageBestScore:number;totalAttempts:number;totalPracticeSeconds:number;lastPracticed:string|null};
 const KEY='jazzclass.midi-progress.v1';
 const freshRecord=():MidiLessonProgress=>({attempts:0,bestScore:0,lastScore:0,lastPracticed:null,totalPracticeSeconds:0,weakPitchClasses:[],mastered:false});
 export function createMidiProgress():MidiProgress{return{version:1,lessons:{},totalPracticeSeconds:0,totalAttempts:0,lastPracticed:null};}
@@ -36,5 +36,5 @@ export function recordMidiAttempt(progress:MidiProgress,lessonId:string,score:nu
 }
 export function getMidiProgressSummary(progress:MidiProgress,curriculumSize:number):MidiProgressSummary{
  const records=Object.values(progress.lessons),attempted=records.filter(r=>r.attempts>0);
- return{attemptedLessons:attempted.length,masteredLessons:attempted.filter(r=>r.mastered).length,averageBestScore:attempted.length?Math.round(attempted.reduce((sum,r)=>sum+r.bestScore,0)/attempted.length):0,totalAttempts:progress.totalAttempts,totalPracticeSeconds:progress.totalPracticeSeconds,lastPracticed:progress.lastPracticed};
+ return{totalLessons:Math.max(0,Math.floor(curriculumSize)),attemptedLessons:attempted.length,masteredLessons:attempted.filter(r=>r.mastered).length,averageBestScore:attempted.length?Math.round(attempted.reduce((sum,r)=>sum+r.bestScore,0)/attempted.length):0,totalAttempts:progress.totalAttempts,totalPracticeSeconds:progress.totalPracticeSeconds,lastPracticed:progress.lastPracticed};
 }

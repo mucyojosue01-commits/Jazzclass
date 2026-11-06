@@ -217,6 +217,18 @@ export default function App() {
 
   useEffect(() => () => closeAudio(), []);
 
+  useEffect(() => {
+    const syncMidiDock = (event: Event) => {
+      const detail = (event as CustomEvent<{notes:number[];leftNotes:number[];rightNotes:number[]}>).detail;
+      setLiveNotes(detail.notes);
+      setLeftLiveNotes(detail.leftNotes);
+      setRightLiveNotes(detail.rightNotes);
+      if (detail.notes.length) setPlayedNotes(old => [...detail.notes, ...old].slice(0, 28));
+    };
+    window.addEventListener('jazzclass:midi-live', syncMidiDock);
+    return () => window.removeEventListener('jazzclass:midi-live', syncMidiDock);
+  }, []);
+
   const stopPlayback = () => {
     stop();
     setPlayedNotes([]);
@@ -359,6 +371,6 @@ export default function App() {
     </section>}
 
     <footer className="studio-footer"><b>JAZZCLASS · MUSIC KNOWLEDGE STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
-    {tab!=='my-stuff' && tab!=='midi-studio' && tab!=='ear-training' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} hasSequence={hasSequence} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
+    {tab!=='my-stuff' && tab!=='ear-training' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} hasSequence={hasSequence} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
   </div>;
 }

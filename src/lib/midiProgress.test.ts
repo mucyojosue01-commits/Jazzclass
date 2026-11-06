@@ -22,6 +22,7 @@ describe('MIDI lesson progress',()=>{
   value=recordMidiAttempt(value,'a',90,[60,64,67],[60,64,67],30);
   value=recordMidiAttempt(value,'b',50,[60],[60,64,67],20);
   const summary=getMidiProgressSummary(value,4);
+  expect(summary.totalLessons).toBe(4);
   expect(summary.attemptedLessons).toBe(2);
   expect(summary.masteredLessons).toBe(1);
   expect(summary.averageBestScore).toBe(70);

@@ -1,5 +1,5 @@
 export type PitchAssessment = {
-  score:number; precision:number; recall:number; f1:number; pitchClassScore:number; orderScore:number|null;
+  score:number; precision:number; recall:number; f1:number; pitchClassScore:number;
   matched:number[]; missing:number[]; extra:number[];
 };
 const uniqueSorted=(notes:number[])=>[...new Set(notes.filter(n=>Number.isInteger(n)&&n>=0&&n<=127))].sort((a,b)=>a-b);
@@ -18,21 +18,5 @@ export function assessPitchSet(targetNotes:number[],playedNotes:number[]):PitchA
   const pcPrecision=playedPc.size?pcMatched/playedPc.size:0;
   const pcRecall=targetPc.size?pcMatched/targetPc.size:0;
   const pcF1=pcPrecision+pcRecall?2*pcPrecision*pcRecall/(pcPrecision+pcRecall):0;
-  return {score:percent(f1),precision:percent(precision),recall:percent(recall),f1:percent(f1),pitchClassScore:percent(pcF1),orderScore:null,matched,missing,extra};
-}
-
-export function assessNoteSequence(targetNotes:number[],playedNotes:number[]):number {
- const target=targetNotes.filter(n=>Number.isInteger(n)&&n>=0&&n<=127);
- const played=playedNotes.filter(n=>Number.isInteger(n)&&n>=0&&n<=127);
- if(!target.length||!played.length)return 0;
- let previous=Array.from({length:played.length+1},(_,index)=>index);
- for(let i=1;i<=target.length;i++){
-  const current=[i];
-  for(let j=1;j<=played.length;j++){
-   const substitution=previous[j-1]+(target[i-1]===played[j-1]?0:1);
-   current[j]=Math.min(previous[j]+1,current[j-1]+1,substitution);
-  }
-  previous=current;
- }
- return percent(1-previous[played.length]/Math.max(target.length,played.length));
+  return {score:percent(f1),precision:percent(precision),recall:percent(recall),f1:percent(f1),pitchClassScore:percent(pcF1),matched,missing,extra};
 }

@@ -49,7 +49,7 @@ export default function MidiStudio(){
  const lessons=useMemo(()=>filterMidiLessons(getMidiLessons(keyIndex),level,category,lessonQuery),[keyIndex,level,category,lessonQuery]);
  const lesson=lessons.find(item=>item.id===lessonId)??lessons[0];
  const lessonProgress=lesson?progress.lessons[lesson.id]:undefined;
- useEffect(()=>{if(lesson){setBpm(lesson.bpm);setLessonStep(0);}},[lesson?.id]);
+ useEffect(()=>{if(lesson){setBpm(lesson.bpm);setLessonStep(0);setAttempting(false);setAttemptNotes([]);attemptNotesRef.current=[];attemptSequenceRef.current=[];setAssessment(emptyAssessment);setHasAssessment(false);setFeedback('Select a lesson, start an attempt, then play on your connected keyboard.');}},[lesson?.id]);
  const summary=getMidiProgressSummary(progress,getMidiLessons(keyIndex).length);
  const activeStep=lesson?.steps?.[lessonStep];
  const targetNotes=activeStep?.notes??lesson?.baseNotes??[];

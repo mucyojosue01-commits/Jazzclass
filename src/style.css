@@ -440,3 +440,10 @@
 .midi-workstation{min-height:calc(100vh - 205px)}
 
 .midi-lesson-search{width:100%;margin:3px 0 7px;border:1px solid rgba(255,255,255,.1);border-radius:7px;background:#19191e;color:#eee9dd;padding:9px 10px;font-size:9px;outline:none}.midi-lesson-search:focus{border-color:rgba(231,200,108,.55)}
+
+.midi-connect-button{border:1px solid rgba(226,194,112,.55);border-radius:7px;background:rgba(226,194,112,.12);color:#f0d58e;padding:9px 12px;font:700 8px/1 Inter,system-ui,sans-serif;letter-spacing:.12em;white-space:nowrap;cursor:pointer}
+.midi-connect-button:hover:not(:disabled){background:rgba(226,194,112,.2);border-color:rgba(226,194,112,.85)}
+.midi-connect-button:disabled{opacity:.45;cursor:not-allowed}
+.midi-thru-toggle{display:flex;align-items:center;gap:5px;color:#a9a194;font-size:8px;letter-spacing:.08em;white-space:nowrap}
+.midi-thru-toggle input{accent-color:#d9bb70}
+@media(max-width:760px){.midi-connect-button{width:100%;min-height:36px}.midi-thru-toggle{min-height:28px}}

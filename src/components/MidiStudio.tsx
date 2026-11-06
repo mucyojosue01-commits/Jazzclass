@@ -2,7 +2,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {playNote,playMetronomeTick,unlockAudio,listAudioOutputs,setAudioOutputDevice} from '../lib/pianoAudio';
 import {buildMidiFile,midiNoteName,parseMidiFile,recognizeChord,type MidiNoteEvent} from '../lib/midiEngine';
 import {assessNoteSequence,assessPitchSet} from '../lib/performanceAnalysis';
-import {getMidiLessons,filterMidiLessons,type MidiLessonLevel,type MidiLessonLevelFilter,type MidiLessonCategory} from '../lib/midiCurriculum';
+import {getMidiLessons,filterMidiLessons,type MidiLessonLevelFilter,type MidiLessonCategory} from '../lib/midiCurriculum';
 import {loadMidiProgress,saveMidiProgress,recordMidiAttempt,getMidiProgressSummary,type MidiProgress} from '../lib/midiProgress';
 import HarmonyTrainer from './HarmonyTrainer';
 

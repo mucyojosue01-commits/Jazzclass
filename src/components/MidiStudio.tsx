@@ -2,7 +2,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {playNote,playMetronomeTick,unlockAudio,listAudioOutputs,setAudioOutputDevice} from '../lib/pianoAudio';
 import {buildMidiFile,midiNoteName,parseMidiFile,recognizeChord,type MidiNoteEvent} from '../lib/midiEngine';
 import {assessPitchSet} from '../lib/performanceAnalysis';
-import {getMidiLessons,type MidiLessonLevel,type MidiLessonCategory} from '../lib/midiCurriculum';
+import {getMidiLessons,filterMidiLessons,type MidiLessonLevel,type MidiLessonCategory} from '../lib/midiCurriculum';
 import {loadMidiProgress,saveMidiProgress,recordMidiAttempt,getMidiProgressSummary,type MidiProgress} from '../lib/midiProgress';
 import HarmonyTrainer from './HarmonyTrainer';
 
@@ -45,7 +45,7 @@ export default function MidiStudio(){
  useEffect(()=>()=>{publishLive({notes:[],leftNotes:[],rightNotes:[],chord:'—',connected:false});activeVoices.current.forEach(v=>v.stop());importVoices.current.forEach(v=>v.stop());timers.current.forEach(clearTimeout);},[]);
  useEffect(()=>{saveMidiProgress(progress);},[progress]);
  useEffect(()=>{if(!metronome)return;let beat=0;const tick=()=>{playMetronomeTick(beat%4===0);beat++;};void unlockAudio().then(tick);const id=window.setInterval(tick,60000/bpm);return()=>window.clearInterval(id);},[metronome,bpm]);
- const lessons=useMemo(()=>getMidiLessons(keyIndex).filter(item=>(LEVELS.indexOf(item.level)<=LEVELS.indexOf(level))&&(category==='All'||item.category===category)&&(!lessonQuery.trim()||[item.title,item.description,item.focus,item.category].join(' ').toLowerCase().includes(lessonQuery.trim().toLowerCase()))),[keyIndex,level,category,lessonQuery]);
+ const lessons=useMemo(()=>filterMidiLessons(getMidiLessons(keyIndex),level,category,lessonQuery),[keyIndex,level,category,lessonQuery]);
  const lesson=lessons.find(item=>item.id===lessonId)??lessons[0];
  const lessonProgress=lesson?progress.lessons[lesson.id]:undefined;
  useEffect(()=>{if(lesson){setBpm(lesson.bpm);setLessonStep(0);}},[lesson?.id]);

@@ -288,3 +288,155 @@
 .header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.header-actions .header-pill{margin-left:0}.pwa-install-button{border:1px solid rgba(231,200,108,.45);border-radius:30px;background:rgba(231,200,108,.1);color:#f1dda0;padding:8px 12px;font-size:9px;letter-spacing:.12em;white-space:nowrap}.pwa-install-button:hover{background:rgba(231,200,108,.18)}.pwa-installed{border:1px solid rgba(120,190,140,.3);border-radius:30px;padding:8px 11px;color:#a7d8b4;font-size:8px;letter-spacing:.1em;white-space:nowrap}@media(max-width:600px){.studio-header{height:auto;flex-wrap:wrap}.header-actions{width:100%;justify-content:flex-end}.header-actions .header-pill{display:none}}
 
 .pwa-install-wrap{position:relative}.pwa-install-help{position:absolute;z-index:30;right:0;top:calc(100% + 9px);width:250px;padding:11px 13px;border:1px solid rgba(231,200,108,.25);border-radius:9px;background:#171719;color:#d8d0bd;font-size:10px;line-height:1.55;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+
+/* MIDI Workstation — full-width performance workspace */
+.studio-shell:has(.midi-workstation){width:100%;max-width:none;padding:12px 22px 170px}
+.studio-shell:has(.midi-workstation) .hero{display:none}
+.studio-shell:has(.midi-workstation) .studio-header{height:44px;margin-bottom:8px}
+.studio-shell:has(.midi-workstation) .studio-main{display:block;padding-top:10px}
+.studio-shell:has(.midi-workstation) .catalog{width:100%;min-width:0}
+.studio-shell:has(.midi-workstation) .studio-tabs{position:sticky;top:0;z-index:30;background:rgba(8,8,11,.96);backdrop-filter:blur(18px);margin:0 -22px;padding:8px 22px}
+.midi-workstation{width:100%;min-width:0;color:#f4f0e7}
+.midi-worktop{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 2px 17px}
+.midi-worktop h1{font:clamp(30px,3.5vw,45px)/1 var(--display);margin:6px 0 5px;letter-spacing:-.02em}
+.midi-worktop p{margin:0;color:var(--muted);font-size:12px}
+.midi-eyebrow{font-size:9px;letter-spacing:.2em;color:rgba(231,200,108,.76);text-transform:uppercase}
+.midi-connection-badge{display:flex;align-items:center;gap:9px;border:1px solid rgba(255,255,255,.12);border-radius:30px;padding:10px 14px;color:#a6a09a;font-size:9px;letter-spacing:.13em;white-space:nowrap}
+.midi-connection-badge span{width:7px;height:7px;border-radius:50%;background:#777}
+.midi-connection-badge.online{border-color:rgba(91,202,133,.32);color:#8fe0a8;background:rgba(38,111,66,.12)}
+.midi-connection-badge.online span{background:#5bca85;box-shadow:0 0 12px #5bca85}
+.midi-devicebar{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid rgba(255,255,255,.1);border-radius:13px;background:#101014}
+.midi-device-title{display:flex;align-items:center;gap:9px;min-width:170px;margin-right:auto}
+.midi-icon{display:grid;place-items:center;width:33px;height:33px;border-radius:9px;background:#211b0e;color:var(--gold);font-size:20px}
+.midi-device-title b,.midi-device-title small{display:block}
+.midi-device-title b{font-size:11px}
+.midi-device-title small{max-width:290px;margin-top:3px;color:var(--muted);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.midi-devicebar label,.midi-filter-label{display:flex;flex-direction:column;gap:5px;color:#8e8a83;font-size:8px;letter-spacing:.14em}
+.midi-devicebar select,.midi-filter-label select{min-width:125px;max-width:180px;border:1px solid rgba(255,255,255,.1);border-radius:7px;background:#19191e;color:#eee9dd;padding:8px 9px;font-size:10px;letter-spacing:0;outline:none}
+.midi-icon-button{width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:#19191e;color:var(--gold);font-size:18px}
+.midi-browser-warning{margin-top:9px;padding:10px 12px;border:1px solid rgba(231,200,108,.22);border-radius:8px;background:rgba(231,200,108,.06);color:#d8c58c;font-size:10px}
+.midi-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:11px 0}
+.midi-overview article{min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:linear-gradient(135deg,#151519,#101013)}
+.midi-overview small,.midi-overview span{display:block;color:#89847b;font-size:8px;letter-spacing:.14em}
+.midi-overview strong{display:block;margin:6px 0 3px;font:27px/1 var(--display);color:#f4ead0}
+.midi-overview strong i{font:10px Inter,sans-serif;color:#9b958a;font-style:normal}
+.midi-overview span{font-size:9px;letter-spacing:0}
+.midi-progress-track{height:3px;margin-top:9px;overflow:hidden;border-radius:5px;background:#29282b}
+.midi-progress-track i{display:block;height:100%;background:var(--gold);border-radius:5px}
+.midi-workgrid{display:grid;grid-template-columns:minmax(230px,275px) minmax(390px,1fr) minmax(220px,255px);gap:11px;align-items:start}
+.midi-library-panel,.midi-practice-panel,.midi-insights-panel,.midi-module-card{min-width:0;border:1px solid var(--line);border-radius:13px;background:#101014}
+.midi-library-panel,.midi-insights-panel{padding:13px}
+.midi-practice-panel{padding:16px}
+.midi-section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:13px}
+.midi-section-heading h2{font:25px/1.05 var(--display);margin:5px 0 0;color:#f4eddf}
+.midi-section-heading p{max-width:620px;margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+.midi-count,.midi-bpm-badge{flex:none;padding:6px 8px;border:1px solid rgba(231,200,108,.2);border-radius:20px;color:var(--gold-soft);font-size:8px;letter-spacing:.1em}
+.midi-filter-label{margin-bottom:9px}
+.midi-filter-label select{width:100%;max-width:none}
+.midi-category-pills{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0}
+.midi-category-pills button{border:1px solid rgba(255,255,255,.09);border-radius:20px;background:#17171b;color:#a39d93;padding:5px 8px;font-size:8px}
+.midi-category-pills button.active{border-color:rgba(231,200,108,.5);background:rgba(231,200,108,.1);color:var(--gold-soft)}
+.midi-lesson-list{display:grid;gap:5px;max-height:550px;overflow:auto;padding-right:2px;scrollbar-width:thin;scrollbar-color:#46413a transparent}
+.midi-lesson-item{position:relative;display:block;width:100%;text-align:left;padding:10px 27px 10px 10px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:#151519;color:#eee9df}
+.midi-lesson-item.selected{border-color:rgba(231,200,108,.48);background:rgba(231,200,108,.075)}
+.midi-lesson-item b,.midi-lesson-item small,.midi-lesson-meta{display:block}
+.midi-lesson-meta{margin-bottom:4px;color:#c7a956;font-size:7px;letter-spacing:.1em;text-transform:uppercase}
+.midi-lesson-item b{font-size:10px;line-height:1.35}
+.midi-lesson-item small{margin-top:5px;color:#8e8980;font-size:8px}
+.midi-lesson-item>i{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gold);font-style:normal;font-size:14px}
+.midi-live-stage{padding:14px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:radial-gradient(ellipse at 50% -30%,rgba(202,167,77,.12),transparent 60%),#09090c}
+.midi-live-top{display:flex;justify-content:space-between;color:#8c877e;font-size:8px;letter-spacing:.16em}
+.signal-live{color:#7ed49a}.signal-idle{color:#817c73}
+.midi-live-chord{margin:12px 0 6px;text-align:center;font:clamp(27px,3vw,40px)/1 var(--display);color:var(--gold-soft)}
+.midi-live-notes{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;min-height:34px}
+.midi-live-notes span:not(.midi-placeholder){padding:6px 9px;border:1px solid rgba(231,200,108,.27);border-radius:6px;background:rgba(231,200,108,.09);color:#f3dfa0;font-size:10px}
+.midi-placeholder{color:#706b64;font-size:10px}
+.midi-hand-readout{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}
+.midi-hand-readout>div{min-width:0;padding:9px;border:1px solid rgba(255,255,255,.08);border-radius:7px;background:#111115}
+.midi-hand-readout small,.midi-hand-readout b{display:block}
+.midi-hand-readout small{font-size:7px;letter-spacing:.13em;color:#8c877e}
+.midi-hand-readout>div:first-child small{color:#77cf91}
+.midi-hand-readout>div:last-child small{color:var(--gold)}
+.midi-hand-readout b{margin-top:5px;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.midi-target-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin-top:10px;padding:13px;border:1px solid rgba(231,200,108,.19);border-radius:10px;background:#17140f}
+.midi-target-card h3{margin:5px 0;font:21px var(--display);color:#f2e6c5}
+.midi-target-card p{margin:0;color:#b4aa95;font-size:9px;line-height:1.5}
+.midi-target-notes{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:220px}
+.midi-target-notes span{padding:6px 7px;border:1px solid rgba(231,200,108,.32);border-radius:5px;background:rgba(231,200,108,.09);color:#f4dfa0;font-size:9px}
+.midi-target-full{grid-column:1/-1;color:#817a6d;font-size:8px}
+.midi-assessment{margin-top:11px;padding:13px;border:1px solid var(--line);border-radius:10px;background:#141418}
+.midi-assessment-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.midi-assessment-head h3{margin:5px 0 0;font:21px var(--display)}
+.midi-assessment-head>strong{font:30px var(--display);color:#e6c86e;text-align:right}
+.midi-assessment-head>strong.good{color:#8dd9a2}.midi-assessment-head>strong.mid{color:#e3bd69}
+.midi-assessment-head>strong small{display:block;font:7px Inter,sans-serif;letter-spacing:.14em;color:#928b80}
+.midi-score-bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:10px;margin:12px 0}
+.midi-score-bars>div{display:grid;grid-template-columns:1fr auto;gap:4px;color:#a9a297;font-size:8px}
+.midi-score-bars b{color:#e5dfd2;font-size:9px}
+.midi-score-bars i{grid-column:1/-1;height:4px;overflow:hidden;border-radius:5px;background:#302e2c}
+.midi-score-bars em{display:block;height:100%;border-radius:5px;background:var(--gold)}
+.midi-diagnostics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.midi-diagnostics>div{padding:8px;border-radius:7px;background:#0e0e11}
+.midi-diagnostics small{font-size:7px;letter-spacing:.13em;color:#8d867c}
+.midi-diagnostics p{margin:5px 0 0;color:#e6d9b9;font-size:9px;overflow-wrap:anywhere}
+.midi-feedback{margin:10px 0;color:#b5ad9f;font-size:9px;line-height:1.5}
+.midi-action-row{display:flex;flex-wrap:wrap;gap:6px}
+.midi-primary,.midi-secondary,.midi-danger{border:1px solid #d5b65d;border-radius:7px;background:#d9bc65;color:#17130a;padding:9px 11px;font-size:9px;font-weight:600}
+.midi-secondary{border-color:rgba(255,255,255,.13);background:#1c1c21;color:#d4cbb9}
+.midi-danger{border-color:#9e4949;background:#602a2a;color:#ffe4e4}
+.midi-primary:disabled,.midi-secondary:disabled{opacity:.35;cursor:not-allowed}
+.midi-toolstrip{display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}
+.midi-toolstrip>label{display:flex;align-items:center;gap:8px;color:#9d968b;font-size:8px;letter-spacing:.1em}
+.midi-toolstrip>label b{color:#e8d69e;font-size:9px}
+.midi-toolstrip input[type=range]{width:105px;accent-color:var(--gold)}
+.midi-check input{accent-color:var(--gold)}
+.midi-best-score{padding:14px;border:1px solid rgba(231,200,108,.2);border-radius:9px;background:#17140f}
+.midi-best-score small,.midi-best-score span{display:block;color:#a39a87;font-size:8px;letter-spacing:.12em}
+.midi-best-score strong{display:block;margin:7px 0;font:38px var(--display);color:var(--gold-soft)}
+.midi-best-score span{font-size:8px;letter-spacing:0}
+.midi-stat-list{margin-top:11px}
+.midi-stat-list>div{display:flex;justify-content:space-between;gap:8px;padding:9px 1px;border-bottom:1px solid rgba(255,255,255,.06);font-size:9px}
+.midi-stat-list span{color:#8f897f}.midi-stat-list b{color:#e5ddce;font-weight:500;text-align:right}
+.midi-coach-note{margin-top:12px;padding:10px;border-left:2px solid var(--gold);background:#17140f}
+.midi-coach-note span,.midi-recent-notes>span{color:var(--gold);font-size:7px;letter-spacing:.15em}
+.midi-coach-note p{margin:6px 0 0;color:#b7ad99;font-size:9px;line-height:1.6}
+.midi-recent-notes{margin-top:13px}
+.midi-recent-notes>div{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.midi-recent-notes>div i{padding:4px 5px;border:1px solid rgba(255,255,255,.08);border-radius:4px;color:#ddd3c1;font-size:8px;font-style:normal}
+.midi-recent-notes small,.midi-recent-notes strong{display:block;margin-top:6px;color:#a9a196;font-size:9px;font-weight:400}
+.midi-bottom-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:11px}
+.midi-module-card{padding:13px}
+.midi-module-card .midi-section-heading{margin-bottom:10px}
+.midi-module-card .midi-section-heading h2{font-size:21px}
+.midi-record-controls{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.midi-record-controls input{flex:1;min-width:110px;border:1px solid var(--line);border-radius:6px;background:#19191e;color:#eee;padding:8px;font-size:9px}
+.midi-module-card>small,.midi-module-card>p{color:#948d82;font-size:9px;line-height:1.5}
+.midi-rec-state{color:#9a9388;font-size:8px;letter-spacing:.12em}
+.midi-rec-state.recording{color:#f07b7b}
+.midi-upload{position:relative;display:inline-flex;align-items:center;border:1px solid rgba(231,200,108,.35);border-radius:7px;padding:7px 9px;color:var(--gold-soft);font-size:8px;cursor:pointer}
+.midi-upload input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.midi-import-name{display:block;margin:10px 0 4px;color:#e6ddcd;font-size:10px;overflow-wrap:anywhere}
+.midi-chord-display{display:block;margin:12px 0 4px;font:30px var(--display);color:var(--gold-soft)}
+.midi-advanced-tools{display:grid;gap:5px;margin-top:10px;color:#aaa294;font-size:8px}
+.midi-harmony-wrap{margin-top:12px}
+.midi-dock-spacer{height:5px}
+.studio-shell:has(.midi-workstation) .piano-dock{background:rgba(8,8,11,.97)}
+.studio-shell:has(.midi-workstation) .dock-inner{max-width:none;padding:8px 20px 9px}
+.studio-shell:has(.midi-workstation) .dock-piano{height:78px}
+@media(max-width:1180px){.midi-workgrid{grid-template-columns:240px minmax(0,1fr)}.midi-insights-panel{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.midi-insights-panel>.midi-section-heading{grid-column:1/-1;margin:0}.midi-insights-panel .midi-stat-list{margin:0}.midi-insights-panel .midi-coach-note,.midi-insights-panel .midi-recent-notes{margin:0}}
+@media(max-width:820px){.studio-shell:has(.midi-workstation){padding:9px 10px 155px}.studio-shell:has(.midi-workstation) .studio-tabs{margin:0 -10px;padding:8px 10px}.midi-devicebar{align-items:stretch;flex-wrap:wrap}.midi-device-title{width:100%;margin:0}.midi-devicebar label{flex:1;min-width:125px}.midi-devicebar select{width:100%;max-width:none}.midi-workgrid{grid-template-columns:minmax(0,1fr)}.midi-library-panel{order:2}.midi-practice-panel{order:1}.midi-insights-panel{order:3;grid-column:auto;grid-template-columns:1fr 1fr}.midi-insights-panel>.midi-section-heading{grid-column:1/-1}.midi-bottom-grid{grid-template-columns:1fr 1fr}.midi-lesson-list{max-height:300px}.midi-overview{grid-template-columns:1fr 1fr}.midi-worktop{align-items:flex-start}.midi-worktop p{max-width:280px}.midi-connection-badge{font-size:7px;padding:8px}.midi-section-heading h2{font-size:23px}}
+@media(max-width:520px){.midi-worktop{display:block}.midi-connection-badge{display:inline-flex;margin-top:10px}.midi-overview{gap:6px}.midi-overview article{padding:10px}.midi-overview strong{font-size:23px}.midi-practice-panel{padding:11px}.midi-bottom-grid,.midi-insights-panel{grid-template-columns:1fr}.midi-hand-readout{grid-template-columns:1fr}.midi-target-card{grid-template-columns:1fr}.midi-target-notes{justify-content:flex-start;max-width:none}.midi-score-bars{gap:5px}.midi-score-bars>div{font-size:7px}.midi-action-row>*{flex:1}.midi-toolstrip{gap:9px}.studio-shell:has(.midi-workstation) .dock-inner{padding:7px 10px}.studio-shell:has(.midi-workstation) .dock-piano{height:66px}}
+
+.midi-attempt-capture{display:flex;justify-content:space-between;align-items:center;margin:10px 0 7px;padding:7px 9px;border-radius:6px;background:#101014;color:#a59e92;font-size:8px}
+.midi-attempt-capture span{letter-spacing:.13em}.midi-attempt-capture b{color:var(--gold-soft);font-size:9px}
+.midi-sequence-nav{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:8px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#101014}
+.midi-sequence-nav>span{margin-right:5px;color:#a39a89;font-size:7px;letter-spacing:.14em}
+.midi-sequence-nav button{border:1px solid rgba(255,255,255,.1);border-radius:6px;background:#19191e;color:#bdb4a5;padding:6px 8px;font-size:8px}
+.midi-sequence-nav button.active{border-color:rgba(231,200,108,.55);background:rgba(231,200,108,.11);color:var(--gold-soft)}
+
+.midi-empty{padding:12px;border:1px dashed rgba(255,255,255,.12);border-radius:8px;color:#918a7f;font-size:9px;line-height:1.5}
+
+.studio-shell:has(.midi-workstation) .studio-footer{display:none}
+.midi-workstation{min-height:calc(100vh - 205px)}
+
+.midi-lesson-search{width:100%;margin:3px 0 7px;border:1px solid rgba(255,255,255,.1);border-radius:7px;background:#19191e;color:#eee9dd;padding:9px 10px;font-size:9px;outline:none}.midi-lesson-search:focus{border-color:rgba(231,200,108,.55)}

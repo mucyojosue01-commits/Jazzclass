@@ -34,7 +34,7 @@
 
 **Interfaces:**
 - `assessPitchSet(target: number[], played: number[]): PitchAssessment`
-- Return `score, precision, recall, f1, matched, missing, extra`; score values are percentages 0–100, and empty played sets return score 0.
+- Return `score, precision, recall, f1, pitchClassScore, orderScore, matched, missing, extra`; sequence scoring uses normalized edit distance and empty attempts return 0.
 - Compare unique MIDI pitches and also expose unique pitch classes for diagnostic display.
 
 - [ ] Write tests for exact match, partial match, missing notes, extra notes, octave doubling and empty attempt.
@@ -52,7 +52,7 @@
 **Interfaces:**
 - Curriculum records have stable id, level, category, title, description, target MIDI notes, hand assignment, key, BPM, and coaching tip.
 - `loadMidiProgress()`, `saveMidiProgress()`, `recordMidiAttempt()`, `getMidiProgressSummary()`.
-- Store attempts, best score, session count, total practice seconds, last practiced, and weak pitch classes in versioned localStorage.
+- Store attempts, best score, total practice seconds, last practiced, and weak pitch classes in versioned localStorage.
 
 - [ ] Test normalization, corrupted storage fallback, best-score preservation and summary calculations.
 - [ ] Verify RED, implement, verify GREEN.

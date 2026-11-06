@@ -1,4 +1,5 @@
-export type MidiLessonLevel='All'|'Foundation'|'Developing'|'Advanced'|'Professional';
+export type MidiLessonLevel='Foundation'|'Developing'|'Advanced'|'Professional';
+export type MidiLessonLevelFilter=MidiLessonLevel|'All';
 export type MidiLessonCategory='Scales'|'Triads & sevenths'|'Jazz voicings'|'Gospel & worship'|'Progressions'|'Technique';
 export type MidiLessonStep={label:string;notes:number[];leftNotes:number[];rightNotes:number[]};
 export type MidiLesson={matchingMode?:'set'|'sequence';steps?:MidiLessonStep[];id:string;level:MidiLessonLevel;category:MidiLessonCategory;title:string;description:string;baseNotes:number[];leftNotes:number[];rightNotes:number[];rootKey:number;bpm:number;tip:string;focus:string};
@@ -27,7 +28,7 @@ const lessons:MidiLesson[]=[
 export const MIDI_LESSONS:MidiLesson[]=lessons;
 export function getMidiLessons(keyIndex=6):MidiLesson[]{const rawShift=keyIndex-6;const shift=rawShift>6?rawShift-12:rawShift;return lessons.map(lesson=>({...lesson,baseNotes:lesson.baseNotes.map(n=>n+shift),leftNotes:lesson.leftNotes.map(n=>n+shift),rightNotes:lesson.rightNotes.map(n=>n+shift),steps:lesson.steps?.map(step=>({...step,notes:step.notes.map(n=>n+shift),leftNotes:step.leftNotes.map(n=>n+shift),rightNotes:step.rightNotes.map(n=>n+shift)}))}));}
 
-export function filterMidiLessons(lessons:MidiLesson[],level:MidiLessonLevel,category:MidiLessonCategory|'All',query=''):MidiLesson[]{
+export function filterMidiLessons(lessons:MidiLesson[],level:MidiLessonLevelFilter,category:MidiLessonCategory|'All',query=''):MidiLesson[]{
  const term=query.trim().toLowerCase();
  return lessons.filter(item=>(level==='All'||item.level===level)&&(category==='All'||item.category===category)&&(!term||[item.title,item.description,item.focus,item.category].join(' ').toLowerCase().includes(term)));
 }

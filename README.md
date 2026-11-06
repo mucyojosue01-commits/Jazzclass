@@ -20,7 +20,7 @@ The browser MIDI Studio is the primary full-width performance workspace. It incl
 - Automatic bottom-piano synchronization from physical MIDI note-on/note-off events; the visible keyboard expands to include notes outside its default range.
 - A 19-lesson, all-12-key curriculum across Foundation, Developing, Advanced and Professional levels: scales, triads/sevenths, jazz voicings, gospel/worship, progressions and technique.
 - Chord-by-chord practice for jazz turnarounds, minor iiø–V–i and blues pathways.
-- Hybrid pitch matching: precision, recall, F1-style score, pitch-class fit, matched notes, missing notes and extra notes.
+- Hybrid pitch matching: precision, recall, F1-style chord score, pitch-class fit, and order-aware scale score (70% pitch-set F1 + 30% sequence order), with matched, missing and extra-note diagnostics.
 - Local-first lesson records: attempts, personal best, mastery threshold, practice time and recurring weak pitch classes. No Supabase project is required for MIDI progress.
 - MIDI recording, Standard MIDI File export, MIDI import/playback, metronome, tempo control, instrument selection and Harmony Workshop.
 

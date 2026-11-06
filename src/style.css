@@ -370,7 +370,7 @@
 .midi-assessment-head>strong{font:30px var(--display);color:#e6c86e;text-align:right}
 .midi-assessment-head>strong.good{color:#8dd9a2}.midi-assessment-head>strong.mid{color:#e3bd69}
 .midi-assessment-head>strong small{display:block;font:7px Inter,sans-serif;letter-spacing:.14em;color:#928b80}
-.midi-score-bars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.midi-score-bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:10px;margin:12px 0}
 .midi-score-bars>div{display:grid;grid-template-columns:1fr auto;gap:4px;color:#a9a297;font-size:8px}
 .midi-score-bars b{color:#e5dfd2;font-size:9px}
 .midi-score-bars i{grid-column:1/-1;height:4px;overflow:hidden;border-radius:5px;background:#302e2c}

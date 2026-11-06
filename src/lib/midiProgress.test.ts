@@ -37,6 +37,17 @@ describe('MIDI lesson progress',()=>{
   expect(value.lessons.scale.weakPitchClassCounts[2]).toBe(1);
   expect(value.lessons.scale.weakPitchClasses[0]).toBe(4);
  });
+ it('requires every progression step to reach mastery before completing the lesson',()=>{
+  let value=createMidiProgress();
+  value=recordMidiAttempt(value,'turnaround',91,[60,64,67],[60,64,67],25,0,2);
+  expect(value.lessons.turnaround.mastered).toBe(false);
+  expect(value.lessons.turnaround.bestScoreByStep[0]).toBe(91);
+  value=recordMidiAttempt(value,'turnaround',84,[60,64,67],[60,64,67],25,1,2);
+  expect(value.lessons.turnaround.mastered).toBe(false);
+  value=recordMidiAttempt(value,'turnaround',88,[60,64,67],[60,64,67],25,1,2);
+  expect(value.lessons.turnaround.mastered).toBe(true);
+  expect(value.lessons.turnaround.attemptsByStep[1]).toBe(2);
+ });
  it('loads corrupted storage as a fresh progress record',()=>{
   const storage=memoryStorage();storage.setItem('jazzclass.midi-progress.v1','{broken');
   expect(loadMidiProgress(storage).totalPracticeSeconds).toBe(0);

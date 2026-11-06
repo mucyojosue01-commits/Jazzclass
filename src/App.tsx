@@ -371,6 +371,6 @@ export default function App() {
     </section>}
 
     <footer className="studio-footer"><b>JAZZCLASS · MUSIC KNOWLEDGE STUDIO</b><span>LEARN THE CHORDS · HEAR THE VOICES · PLAY WITH FEEL</span></footer>
-    {tab!=='my-stuff' && tab!=='ear-training' && <PianoDock title={selection?.title ?? 'Free play'} sub={playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} hasSequence={hasSequence} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
+    {tab!=='my-stuff' && tab!=='ear-training' && <PianoDock title={tab==='midi-studio'?'Live MIDI Keyboard':selection?.title ?? 'Free play'} sub={tab==='midi-studio'?'Synchronized with your connected keyboard':playing ? stepLabel || selection?.sub || '' : selection?.sub || 'tap a key'} activeNotes={active} leftNotes={activeLeft} rightNotes={activeRight} playing={playing} paused={paused} hasSequence={hasSequence} onKey={handleKey} onStop={stopPlayback} onPause={pause} onResume={resume} />}
   </div>;
 }

@@ -438,3 +438,5 @@
 
 .studio-shell:has(.midi-workstation) .studio-footer{display:none}
 .midi-workstation{min-height:calc(100vh - 205px)}
+
+.midi-lesson-search{width:100%;margin:3px 0 7px;border:1px solid rgba(255,255,255,.1);border-radius:7px;background:#19191e;color:#eee9dd;padding:9px 10px;font-size:9px;outline:none}.midi-lesson-search:focus{border-color:rgba(231,200,108,.55)}

@@ -23,5 +23,11 @@ const lessons:MidiLesson[]=[
 {id:'altered-dominant',level:'Professional',category:'Technique',title:'Altered dominant shell',description:'Practise a tense C♯ altered-dominant colour and resolve it into F♯ harmony.',baseNotes:[37,65,68,71,74],leftNotes:[37],rightNotes:[65,68,71,74],rootKey:6,bpm:84,tip:'Keep the bass anchored and let the altered upper tones create tension.',focus:'Altered dominant colour'},
 {id:'quartal-voicing',level:'Professional',category:'Technique',title:'Quartal upper-structure voicing',description:'Build a spacious fourth-based colour with a grounded left hand.',baseNotes:[42,54,66,71,76,81],leftNotes:[42,54],rightNotes:[66,71,76,81],rootKey:6,bpm:76,tip:'Keep the fourth-based right-hand shape open and balanced.',focus:'Quartal voicing accuracy'}
 ];
+const LEVEL_ORDER:MidiLessonLevel[]=['Foundation','Developing','Advanced','Professional'];
 export const MIDI_LESSONS:MidiLesson[]=lessons;
 export function getMidiLessons(keyIndex=6):MidiLesson[]{const rawShift=keyIndex-6;const shift=rawShift>6?rawShift-12:rawShift;return lessons.map(lesson=>({...lesson,baseNotes:lesson.baseNotes.map(n=>n+shift),leftNotes:lesson.leftNotes.map(n=>n+shift),rightNotes:lesson.rightNotes.map(n=>n+shift),steps:lesson.steps?.map(step=>({...step,notes:step.notes.map(n=>n+shift),leftNotes:step.leftNotes.map(n=>n+shift),rightNotes:step.rightNotes.map(n=>n+shift)}))}));}
+
+export function filterMidiLessons(lessons:MidiLesson[],level:MidiLessonLevel,category:MidiLessonCategory|'All',query=''):MidiLesson[]{
+ const term=query.trim().toLowerCase();
+ return lessons.filter(item=>LEVEL_ORDER.indexOf(item.level)<=LEVEL_ORDER.indexOf(level)&&(category==='All'||item.category===category)&&(!term||[item.title,item.description,item.focus,item.category].join(' ').toLowerCase().includes(term)));
+}

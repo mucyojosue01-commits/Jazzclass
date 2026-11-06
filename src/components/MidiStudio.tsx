@@ -48,6 +48,7 @@ export default function MidiStudio(){
  const lessons=useMemo(()=>getMidiLessons(keyIndex).filter(item=>(level==='Foundation'||LEVELS.indexOf(item.level)<=LEVELS.indexOf(level))&&(category==='All'||item.category===category)),[keyIndex,level,category]);
  const lesson=lessons.find(item=>item.id===lessonId)??lessons[0];
  const lessonProgress=lesson?progress.lessons[lesson.id]:undefined;
+ useEffect(()=>{if(lesson)setBpm(lesson.bpm);},[lesson?.id]);
  const summary=getMidiProgressSummary(progress,getMidiLessons(keyIndex).length);
  const activeStep=lesson?.steps?.[lessonStep];
  const targetNotes=activeStep?.notes??lesson?.baseNotes??[];

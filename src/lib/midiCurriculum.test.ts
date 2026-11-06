@@ -17,6 +17,9 @@ describe('MIDI lesson curriculum',()=>{
   const foundation=filterMidiLessons(lessons,'Foundation','All');
   expect(foundation.length).toBeGreaterThan(0);
   expect(foundation.every(item=>item.level==='Foundation')).toBe(true);
+  const advancedOnly=filterMidiLessons(lessons,'Advanced','All');
+  expect(advancedOnly.every(item=>item.level==='Advanced')).toBe(true);
+  expect(filterMidiLessons(lessons,'All','All')).toHaveLength(MIDI_LESSONS.length);
   const advancedJazz=filterMidiLessons(lessons,'Advanced','Jazz voicings','rootless');
   expect(advancedJazz.length).toBe(2);
   expect(advancedJazz.every(item=>item.level!=='Professional'&&item.category==='Jazz voicings')).toBe(true);

@@ -28,6 +28,15 @@ describe('MIDI lesson progress',()=>{
   expect(summary.averageBestScore).toBe(70);
   expect(summary.totalAttempts).toBe(2);
  });
+ it('ranks recurring weak pitch classes by actual frequency',()=>{
+  let value=createMidiProgress();
+  value=recordMidiAttempt(value,'scale',70,[60,67,71],[60,64,67,71],20);
+  value=recordMidiAttempt(value,'scale',70,[60,67,71],[60,64,67,71],20);
+  value=recordMidiAttempt(value,'scale',80,[60,64,67,71],[60,64,67,71,74],20);
+  expect(value.lessons.scale.weakPitchClassCounts[4]).toBe(2);
+  expect(value.lessons.scale.weakPitchClassCounts[2]).toBe(1);
+  expect(value.lessons.scale.weakPitchClasses[0]).toBe(4);
+ });
  it('loads corrupted storage as a fresh progress record',()=>{
   const storage=memoryStorage();storage.setItem('jazzclass.midi-progress.v1','{broken');
   expect(loadMidiProgress(storage).totalPracticeSeconds).toBe(0);
